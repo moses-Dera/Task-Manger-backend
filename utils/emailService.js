@@ -36,7 +36,7 @@ const sendWelcomeEmail = async (user) => {
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const resetLink = `https://task-flow-rho-eight.vercel.app/reset-password?token=${resetToken}`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h1 style="color: #1C64F2;">Reset Your Password</h1>

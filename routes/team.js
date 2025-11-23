@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { auth, authorize } = require('../middleware/auth');
-const { getEmployees, getPerformance, assignTask, inviteUser, updateUser, deleteUser } = require('../controllers/teamController');
+const { getEmployees, getPerformance, assignTask, inviteUser, updateUser, deleteUser, notifyTeamMeeting } = require('../controllers/teamController');
 
 const router = express.Router();
 
