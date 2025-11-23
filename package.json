@@ -17,7 +17,8 @@
     "multer": "^1.4.5-lts.1",
     "express-validator": "^7.0.1",
     "nodemailer": "^6.9.7",
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
