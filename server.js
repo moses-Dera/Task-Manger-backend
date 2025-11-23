@@ -16,6 +16,10 @@ const simpleChatRoutes = require('./routes/simpleChat');
 const fixUserRoutes = require('./routes/fixUser');
 const notificationRoutes = require('./routes/notifications');
 
+// Initialize email service early to ensure it's ready
+const emailService = require('./utils/emailService');
+console.log('[Server] Email service initialized');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {

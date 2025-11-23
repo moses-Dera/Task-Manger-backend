@@ -27,7 +27,9 @@ const signup = async (req, res) => {
 
     // Send welcome email asynchronously (don't wait for it)
     sendWelcomeEmail(user).catch(emailError => {
-      console.error('Failed to send welcome email:', emailError);
+      console.error('Failed to send welcome email:', emailError.message);
+    }).then(() => {
+      console.log('Welcome email sent successfully to:', user.email);
     });
 
     const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
