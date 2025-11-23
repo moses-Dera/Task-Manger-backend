@@ -1,12 +1,12 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.sendgrid.net',
+  host: 'smtp-relay.brevo.com',
   port: 587,
   secure: false,
   auth: {
-    user: 'apikey',
-    pass: process.env.SENDGRID_API_KEY,
+    user: process.env.BREVO_EMAIL,
+    pass: process.env.BREVO_API_KEY,
   },
   connectionTimeout: 10000,
   greetingTimeout: 10000,
