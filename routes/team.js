@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { auth, authorize } = require('../middleware/auth');
-const { getEmployees, getPerformance, assignTask, inviteUser } = require('../controllers/teamController');
+const { getEmployees, getPerformance, assignTask, inviteUser, updateUser, deleteUser } = require('../controllers/teamController');
 
 const router = express.Router();
 
@@ -21,5 +21,11 @@ router.post('/assign-task', auth, authorize('admin', 'manager'), [
 router.post('/invite', auth, authorize('admin', 'manager'), [
   body('email').isEmail().withMessage('Valid email is required')
 ], inviteUser);
+
+// Update user
+router.put('/users/:userId', auth, authorize('admin', 'manager'), updateUser);
+
+// Delete user
+router.delete('/users/:userId', auth, authorize('admin', 'manager'), deleteUser);
 
 module.exports = router;

@@ -12,6 +12,29 @@ const getEmployees = async (req, res) => {
       const tasksAssigned = await Task.countDocuments({ assigned_to: employee._id, company: req.user.company });
       const tasksCompleted = await Task.countDocuments({ assigned_to: employee._id, status: 'completed', company: req.user.company });
       
+      let performanceScore = 'N/A';
+      let performanceLabel = 'No tasks assigned';
+      
+      if (tasksAssigned > 0) {
+        const completionRate = (tasksCompleted / tasksAssigned) * 100;
+        if (completionRate >= 90) {
+          performanceScore = 'A+';
+          performanceLabel = 'Excellent';
+        } else if (completionRate >= 80) {
+          performanceScore = 'A';
+          performanceLabel = 'Very Good';
+        } else if (completionRate >= 70) {
+          performanceScore = 'B';
+          performanceLabel = 'Good';
+        } else if (completionRate >= 60) {
+          performanceScore = 'C';
+          performanceLabel = 'Satisfactory';
+        } else {
+          performanceScore = 'D';
+          performanceLabel = 'Needs Improvement';
+        }
+      }
+      
       return {
         id: employee._id,
         name: employee.name,
@@ -19,7 +42,9 @@ const getEmployees = async (req, res) => {
         role: employee.role,
         tasks_assigned: tasksAssigned,
         tasks_completed: tasksCompleted,
-        performance_score: tasksAssigned > 0 ? (tasksCompleted / tasksAssigned > 0.8 ? 'A' : 'B') : 'N/A'
+        completion_rate: tasksAssigned > 0 ? ((tasksCompleted / tasksAssigned) * 100).toFixed(1) : 0,
+        performance_score: performanceScore,
+        performance_label: performanceLabel
       };
     }));
 
@@ -111,9 +136,69 @@ const inviteUser = async (req, res) => {
   }
 };
 
+const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, role, phone, department } = req.body;
+
+    // Verify user has permission (admin or manager can only edit their own company)
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (targetUser.company !== req.user.company && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+    if (phone !== undefined) updateData.phone = phone;
+    if (department !== undefined) updateData.department = department;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+    res.json({ success: true, data: updatedUser });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, error: 'Email already exists' });
+    }
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Verify user has permission
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (targetUser.company !== req.user.company && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    // Prevent deleting own account
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+    }
+
+    await User.findByIdAndDelete(userId);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
 module.exports = {
   getEmployees,
   getPerformance,
   assignTask,
-  inviteUser
+  inviteUser,
+  updateUser,
+  deleteUser
 };
