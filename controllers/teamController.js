@@ -10,7 +10,28 @@ const getEmployees = async (req, res) => {
       .select('name email role')
       .lean();
 
-    res.json({ success: true, data: employees });
+    const employeesWithStats = await Promise.all(employees.map(async (employee) => {
+      const tasksAssigned = await Task.countDocuments({ assigned_to: employee._id, company: req.user.company });
+      const tasksCompleted = await Task.countDocuments({ assigned_to: employee._id, status: 'completed', company: req.user.company });
+      
+      let performanceScore = 'N/A';
+      if (tasksAssigned > 0) {
+        const completionRate = (tasksCompleted / tasksAssigned) * 100;
+        performanceScore = completionRate >= 90 ? 'A+' : completionRate >= 80 ? 'A' : completionRate >= 70 ? 'B' : 'C';
+      }
+      
+      return {
+        id: employee._id,
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        tasks_assigned: tasksAssigned,
+        tasks_completed: tasksCompleted,
+        performance_score: performanceScore
+      };
+    }));
+
+    res.json({ success: true, data: employeesWithStats });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
@@ -18,27 +39,20 @@ const getEmployees = async (req, res) => {
 
 const getPerformance = async (req, res) => {
   try {
-    const stats = await Task.aggregate([
-      { $match: { company: req.user.company } },
-      { $group: {
-        _id: '$status',
-        count: { $sum: 1 }
-      }}
-    ]);
+    const totalTasks = await Task.countDocuments({ company: req.user.company });
+    const completedTasks = await Task.countDocuments({ company: req.user.company, status: 'completed' });
+    const pendingTasks = await Task.countDocuments({ company: req.user.company, status: 'pending' });
+    const inProgressTasks = await Task.countDocuments({ company: req.user.company, status: 'in-progress' });
+    const overdueTasks = await Task.countDocuments({ company: req.user.company, status: 'overdue' });
 
     const data = {
-      total_tasks: 0,
-      completed_tasks: 0,
-      pending_tasks: 0,
-      in_progress_tasks: 0
+      total_tasks: totalTasks,
+      completed_tasks: completedTasks,
+      pending_tasks: pendingTasks,
+      in_progress_tasks: inProgressTasks,
+      overdue_tasks: overdueTasks,
+      completion_rate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
     };
-
-    stats.forEach(stat => {
-      data.total_tasks += stat.count;
-      if (stat._id === 'completed') data.completed_tasks = stat.count;
-      if (stat._id === 'pending') data.pending_tasks = stat.count;
-      if (stat._id === 'in-progress') data.in_progress_tasks = stat.count;
-    });
 
     res.json({ success: true, data });
   } catch (error) {

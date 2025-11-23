@@ -37,11 +37,20 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Title and assigned user required' });
     }
 
+    // Validate assigned_to user exists and belongs to same company
+    const assignedUser = await User.findById(assigned_to);
+    if (!assignedUser) {
+      return res.status(400).json({ success: false, error: 'Assigned user not found' });
+    }
+    if (assignedUser.company !== req.user.company) {
+      return res.status(400).json({ success: false, error: 'Cannot assign task to user from different company' });
+    }
+
     const task = await Task.create({
       title,
       description: description || '',
       priority: priority || 'medium',
-      due_date,
+      due_date: due_date || null,
       assigned_to,
       created_by: req.user._id,
       company: req.user.company
@@ -49,7 +58,8 @@ router.post('/', auth, async (req, res) => {
     
     res.status(201).json({ success: true, data: task });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Task creation error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 });
 
