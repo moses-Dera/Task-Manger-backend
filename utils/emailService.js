@@ -1,26 +1,51 @@
 const nodemailer = require('nodemailer');
 
+// Log email configuration on startup
+console.log('Email Configuration:', {
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  user: process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 5) + '...' : 'NOT SET',
+  pass: process.env.EMAIL_PASS ? '***CONFIGURED***' : 'NOT SET',
+  from: process.env.EMAIL_FROM
+});
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
-  secure: false,
+  secure: process.env.EMAIL_SECURE === 'true' || parseInt(process.env.EMAIL_PORT) === 465,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  // Allow self-signed certificates (for testing only)
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+// Verify transporter connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('Email service verification failed:', error);
+  } else {
+    console.log('Email service is ready:', success);
   }
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    await transporter.sendMail({
+    console.log(`Attempting to send email to: ${to}, subject: ${subject}`);
+    const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to,
       subject,
       html
     });
-    console.log('Email sent successfully');
+    console.log('Email sent successfully:', info.messageId);
+    return info;
   } catch (error) {
-    console.error('Email sending failed:', error);
+    console.error('Email sending failed for', to, ':', error.message);
+    console.error('Full error:', error);
     throw error;
   }
 };
