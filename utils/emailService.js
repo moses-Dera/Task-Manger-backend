@@ -2,28 +2,31 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 5000
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    await transporter.sendMail({
+    console.log(`Attempting to send email to: ${to}`);
+    const result = await transporter.sendMail({
       from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html
     });
+    console.log(`Email sent successfully to ${to}:`, result.messageId);
+    return { success: true, messageId: result.messageId };
   } catch (error) {
-    // Silent fail for performance
+    console.error(`Email failed to ${to}:`, error.message);
+    throw error;
   }
 };
 
@@ -33,9 +36,19 @@ const sendWelcomeEmail = async (user) => {
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-  const html = `<h1>Reset Password</h1><p><a href="${resetLink}">Reset your password</a></p>`;
-  await sendEmail(user.email, "Reset Password", html);
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #1C64F2;">Reset Your Password</h1>
+      <p>Hello ${user.name},</p>
+      <p>You requested to reset your password. Click the button below to reset it:</p>
+      <a href="${resetLink}" style="background-color: #1C64F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">Reset Password</a>
+      <p>Or copy this link: ${resetLink}</p>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    </div>
+  `;
+  return await sendEmail(user.email, "Reset Your TaskFlow Password", html);
 };
 
 const sendPasswordResetConfirmation = async (user) => {
