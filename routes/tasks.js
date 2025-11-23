@@ -73,7 +73,15 @@ router.post('/', auth, async (req, res) => {
       company: req.user.company
     });
     
-    res.json({ success: true, data: task });
+    // Get updated task count for the assigned user
+    const taskCount = await Task.countDocuments({ assigned_to, company: req.user.company });
+    
+    res.json({ 
+      success: true, 
+      data: task,
+      updatedTaskCount: taskCount,
+      assignedUserId: assigned_to
+    });
   } catch (error) {
     res.json({ success: false, error: error.message });
   }
