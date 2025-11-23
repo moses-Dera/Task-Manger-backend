@@ -4,6 +4,8 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const compression = require('compression');
+const helmet = require('helmet');
 const User = require('./models/User');
 require('dotenv').config();
 
@@ -30,6 +32,8 @@ const io = socketIo(server, {
 });
 
 // Middleware
+app.use(helmet()); // Security headers
+app.use(compression()); // Gzip compression for responses
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));

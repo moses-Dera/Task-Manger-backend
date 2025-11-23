@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const Task = require('../models/Task');
 const TaskFile = require('../models/TaskFile');
 const { auth, authorize } = require('../middleware/auth');
+const { cacheResponse, invalidateCache } = require('../middleware/cache');
 
 const router = express.Router();
 
@@ -16,8 +17,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Get tasks
-router.get('/', auth, async (req, res) => {
+// Get tasks with caching
+router.get('/', auth, cacheResponse(60), async (req, res) => {
   try {
     const { status, tab } = req.query;
     let query = {};
@@ -39,7 +40,8 @@ router.get('/', auth, async (req, res) => {
     const tasks = await Task.find(query)
       .populate('assigned_to', 'name')
       .populate('created_by', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean(); // Use lean() for faster queries
 
     res.json({ success: true, data: tasks });
   } catch (error) {
@@ -65,6 +67,9 @@ router.post('/', auth, authorize('admin', 'manager'), [
     
     await task.save();
     await task.populate(['assigned_to', 'created_by'], 'name');
+    
+    // Invalidate cache when task is created
+    await invalidateCache('/api/tasks*');
     
     res.status(201).json({ success: true, data: task });
   } catch (error) {
@@ -108,6 +113,9 @@ router.put('/:id', auth, async (req, res) => {
     const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true })
       .populate('assigned_to', 'name')
       .populate('created_by', 'name');
+
+    // Invalidate cache when task is updated
+    await invalidateCache('/api/tasks*');
 
     res.json({ success: true, data: updatedTask });
   } catch (error) {

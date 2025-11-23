@@ -8,4 +8,10 @@ const notificationSchema = new mongoose.Schema({
   read: { type: Boolean, default: false }
 }, { timestamps: true });
 
+// Add indexes for frequently queried fields
+notificationSchema.index({ user_id: 1 });
+notificationSchema.index({ read: 1 });
+notificationSchema.index({ user_id: 1, read: 1 }); // Compound index for unread notifications
+notificationSchema.index({ createdAt: -1 }); // For sorting by creation date
+
 module.exports = mongoose.model('Notification', notificationSchema);
