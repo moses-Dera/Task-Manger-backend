@@ -114,9 +114,9 @@ const inviteUser = async (req, res) => {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
-    const tempPassword = crypto.randomBytes(12).toString('hex');
+    const tempPassword = crypto.randomBytes(8).toString('hex'); // Shorter password for better UX
     const user = new User({
-      name: email.split('@')[0],
+      name: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' '), // Clean up name
       email,
       password: tempPassword,
       role,
@@ -125,22 +125,52 @@ const inviteUser = async (req, res) => {
     
     await user.save();
 
-    console.log(`[Team] Inviting user: ${email} with role: ${role}`);
+    console.log(`\n[TEAM] 📧 Inviting user: ${email} with role: ${role}`);
+    console.log(`[TEAM] 🔑 Temporary password: ${tempPassword}`);
+    console.log(`[TEAM] 🏢 Company: ${req.user.company}`);
     
-    // Send invite email asynchronously
-    sendWelcomeEmail(user, tempPassword)
-      .then(() => {
-        console.log('[Team] ✓ Invitation email sent successfully to:', email);
-      })
-      .catch(emailError => {
-        console.error('[Team] ✗ Failed to send invitation email to', email);
-        console.error('[Team] Email Error:', emailError.message);
+    // Send invite email with better error handling
+    try {
+      await sendWelcomeEmail(user, tempPassword, true);
+      console.log(`[TEAM] ✅ Invitation email sent successfully to: ${email}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'User invited successfully! Invitation email sent.',
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          tempPassword: tempPassword // Include in response for debugging
+        }
       });
+    } catch (emailError) {
+      console.error(`[TEAM] ❌ Failed to send invitation email to ${email}`);
+      console.error(`[TEAM] Email Error Details:`, {
+        code: emailError.code,
+        message: emailError.message,
+        command: emailError.command
+      });
+      
+      // Still return success but with email warning
+      res.json({ 
+        success: true, 
+        message: `User invited successfully! However, email delivery failed. Please share these credentials manually:\n\nEmail: ${email}\nTemporary Password: ${tempPassword}`,
+        emailError: true,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          tempPassword: tempPassword
+        }
+      });
+    }
     
-    res.json({ success: true, message: 'User invited successfully' });
   } catch (error) {
-    console.error('[Team] Invite error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('[TEAM] Invite error:', error);
+    res.status(500).json({ success: false, error: 'Server error: ' + error.message });
   }
 };
 

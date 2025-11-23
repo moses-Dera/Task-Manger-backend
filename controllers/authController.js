@@ -25,15 +25,15 @@ const signup = async (req, res) => {
     const user = new User({ name, email, password, role: role || 'employee', company });
     await user.save();
 
-    // Send welcome email asynchronously but log any errors
-    sendWelcomeEmail(user)
-      .then(() => {
-        console.log('[Auth] ✓ Welcome email sent successfully to:', user.email);
-      })
-      .catch(emailError => {
-        console.error('[Auth] ✗ Failed to send welcome email to', user.email);
-        console.error('[Auth] Email Error:', emailError.message);
-      });
+    // Send welcome email and wait for it to complete
+    try {
+      await sendWelcomeEmail(user);
+      console.log('[Auth] ✓ Welcome email sent successfully to:', user.email);
+    } catch (emailError) {
+      console.error('[Auth] ✗ Failed to send welcome email to', user.email, 'but user was created.');
+      console.error('[Auth] Email Error:', emailError.message);
+      // Optional: Decide if you want to return an error to the user if email fails
+    }
 
     const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
                            process.env.JWT_SECRET, { expiresIn: '24h' });

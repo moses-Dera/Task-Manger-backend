@@ -17,16 +17,21 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
-  // Allow self-signed certificates (for testing only)
-  tls: {
-    rejectUnauthorized: false
-  }
+  // Enforce TLS. For local testing with self-signed certs, you might need
+  // to temporarily set `rejectUnauthorized: false` in a local-only .env config.
+  // For production, this should always be true.
+  tls: { rejectUnauthorized: process.env.NODE_ENV === 'development' ? false : true }
 });
 
 // Verify transporter connection
 transporter.verify((error, success) => {
   if (error) {
-    console.error('Email service verification failed:', error);
+    console.error('================================================');
+    console.error('====== ✗ EMAIL SERVICE VERIFICATION FAILED =====');
+    console.error('================================================');
+    console.error('Error:', error.message);
+    console.error('Troubleshooting: Check .env variables (EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS) and network/firewall settings.');
+    console.error('================================================\n');
   } else {
     console.log('Email service is ready:', success);
   }
@@ -54,7 +59,7 @@ const sendEmail = async (to, subject, html) => {
     console.error(`[EMAIL] ✗ Email sending FAILED for ${to}`);
     console.error(`  Error Code: ${error.code}`);
     console.error(`  Error Message: ${error.message}`);
-    console.error(`  Error Details:`, error);
+    console.error(`  Full Error:`, error);
     console.error(`\n[EMAIL] Troubleshooting:`);
     console.error(`  - Check EMAIL_HOST: ${process.env.EMAIL_HOST}`);
     console.error(`  - Check EMAIL_PORT: ${process.env.EMAIL_PORT}`);
@@ -64,7 +69,7 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
-const sendWelcomeEmail = async (user, tempPassword = null) => {
+const sendWelcomeEmail = async (user, tempPassword = null, isInvite = false) => {
   const html = `
     <!DOCTYPE html>
     <html>
@@ -179,7 +184,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
     </html>
   `;
   
-  const subject = tempPassword ? 
+  const subject = isInvite ? 
     '🎉 You\'re Invited to TaskFlow - Get Started!' : 
     '🎉 Welcome to TaskFlow - Let\'s Get Started!';
   
