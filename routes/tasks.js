@@ -90,6 +90,61 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
+// Upload file to task (mock implementation)
+router.post('/:id/files', auth, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, company: req.user.company });
+    
+    if (!task) {
+      return res.status(404).json({ success: false, error: 'Task not found' });
+    }
 
+    // Mock file upload - in a real app, you'd use multer and cloud storage
+    const mockFile = {
+      id: Date.now().toString(),
+      name: 'uploaded-file.pdf',
+      size: '2.5 MB',
+      uploadedBy: req.user.name,
+      uploadedAt: new Date().toISOString()
+    };
+
+    res.json({ success: true, data: mockFile });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Get task files (mock implementation)
+router.get('/:id/files', auth, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, company: req.user.company });
+    
+    if (!task) {
+      return res.status(404).json({ success: false, error: 'Task not found' });
+    }
+
+    // Mock files - in a real app, you'd fetch from database
+    const mockFiles = [
+      {
+        id: '1',
+        name: 'requirements.pdf',
+        size: '1.2 MB',
+        uploadedBy: 'John Doe',
+        uploadedAt: new Date(Date.now() - 86400000).toISOString()
+      },
+      {
+        id: '2',
+        name: 'design-mockup.png',
+        size: '3.4 MB',
+        uploadedBy: 'Jane Smith',
+        uploadedAt: new Date(Date.now() - 172800000).toISOString()
+      }
+    ];
+
+    res.json({ success: true, data: mockFiles });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
 
 module.exports = router;

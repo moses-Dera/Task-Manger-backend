@@ -9,6 +9,9 @@ const taskRoutes = require('./routes/tasks');
 const teamRoutes = require('./routes/team');
 const chatRoutes = require('./routes/chat');
 const notificationRoutes = require('./routes/notifications');
+const logsRoutes = require('./routes/logs');
+const systemRoutes = require('./routes/system');
+const fixUserRoutes = require('./routes/fixUser');
 
 const app = express();
 
@@ -23,6 +26,9 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/logs', logsRoutes);
+app.use('/api/system', systemRoutes);
+app.use('/api/fix', fixUserRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)

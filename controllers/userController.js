@@ -35,7 +35,62 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const getSettings = async (req, res) => {
+  try {
+    // Return default settings or user-specific settings
+    const defaultSettings = {
+      language: 'english',
+      emailNotifications: true,
+      pushNotifications: true,
+      meetingReminders: true,
+      profileVisibility: true,
+      activityStatus: true,
+      theme: 'light'
+    };
+    
+    res.json({ success: true, data: defaultSettings });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+const updateSettings = async (req, res) => {
+  try {
+    // In a real app, you'd save settings to database
+    // For now, just return success
+    res.json({ success: true, message: 'Settings updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (!user || !(await user.comparePassword(currentPassword))) {
+      return res.status(400).json({ success: false, error: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  getSettings,
+  updateSettings,
+  changePassword
 };
