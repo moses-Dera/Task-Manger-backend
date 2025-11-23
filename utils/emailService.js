@@ -43,8 +43,21 @@ const sendPasswordResetConfirmation = async (user) => {
   await sendEmail(user.email, "Password Reset Successful", html);
 };
 
+const sendMeetingNotification = async (user, meetingData) => {
+  const { title, description, meeting_url, manager } = meetingData;
+  const html = `
+    <h1>${title}</h1>
+    <p>Hello ${user.name},</p>
+    <p>${description || `${manager} has started a team meeting.`}</p>
+    <p><a href="${meeting_url}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Join Meeting</a></p>
+    <p>Meeting Link: ${meeting_url}</p>
+  `;
+  await sendEmail(user.email, `Team Meeting: ${title}`, html);
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendPasswordResetEmail,
-  sendPasswordResetConfirmation
+  sendPasswordResetConfirmation,
+  sendMeetingNotification
 };

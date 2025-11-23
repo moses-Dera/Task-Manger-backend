@@ -28,4 +28,7 @@ router.put('/users/:userId', auth, authorize('admin', 'manager'), updateUser);
 // Delete user
 router.delete('/users/:userId', auth, authorize('admin', 'manager'), deleteUser);
 
+// Notify team meeting
+router.post('/notify-meeting', auth, authorize('admin', 'manager'), notifyTeamMeeting);
+
 module.exports = router;

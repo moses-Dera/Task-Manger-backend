@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Task = require('../models/Task');
-const { sendWelcomeEmail } = require('../utils/emailService');
+const { sendWelcomeEmail, sendMeetingNotification } = require('../utils/emailService');
 
 const getEmployees = async (req, res) => {
   try {
@@ -92,6 +92,12 @@ const inviteUser = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email is required' });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, error: 'Invalid email format' });
+    }
+
     const existingUser = await User.findOne({ email }).lean();
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'User already exists' });
@@ -99,12 +105,14 @@ const inviteUser = async (req, res) => {
 
     const tempPassword = crypto.randomBytes(6).toString('hex');
     const user = await User.create({
-      name: email.split('@')[0],
-      email,
+      name: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ').trim(),
+      email: email.toLowerCase().trim(),
       password: tempPassword,
       role,
       company: req.user.company
     });
+    
+    console.log('User created with email:', user.email);
     
     // Send email asynchronously
     sendWelcomeEmail(user).catch(() => {});
@@ -120,6 +128,7 @@ const inviteUser = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Invite user error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
@@ -182,11 +191,73 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const notifyTeamMeeting = async (req, res) => {
+  try {
+    const { title, description, meeting_url } = req.body;
+    
+    if (!title || !meeting_url) {
+      return res.status(400).json({ success: false, error: 'Title and meeting URL required' });
+    }
+
+    // Get all employees in company
+    const employees = await User.find({ 
+      company: req.user.company, 
+      role: 'employee' 
+    }).select('email name _id').lean();
+    
+    console.log('Found employees for meeting notification:', employees.map(e => ({ name: e.name, email: e.email })));
+    
+    // Create notification for each employee
+    const notifications = employees.map(employee => ({
+      user_id: employee._id,
+      title: title,
+      message: description || `Meeting started by ${req.user.name}`,
+      type: 'meeting',
+      data: { meeting_url },
+      created_at: new Date()
+    }));
+
+    // In a real app, you'd save notifications to DB and send emails
+    // await Notification.insertMany(notifications);
+    
+    // Send emails to all employees
+    if (employees.length > 0) {
+      const emailPromises = employees.map(employee => {
+        console.log(`Sending meeting notification to: ${employee.email}`);
+        return sendMeetingNotification(employee, { title, description, meeting_url, manager: req.user.name })
+          .catch(error => {
+            console.error(`Email failed for ${employee.email}:`, error.message);
+            return { failed: true, email: employee.email, error: error.message };
+          });
+      });
+      
+      // Send emails asynchronously
+      Promise.all(emailPromises).then(results => {
+        const failed = results.filter(r => r && r.failed);
+        if (failed.length > 0) {
+          console.log('Some emails failed:', failed);
+        }
+      });
+    } else {
+      console.log('No employees found to notify');
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Meeting notification sent to ${employees.length} team members`,
+      notified_count: employees.length
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
 module.exports = {
   getEmployees,
   getPerformance,
   assignTask,
   inviteUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  notifyTeamMeeting
 };
