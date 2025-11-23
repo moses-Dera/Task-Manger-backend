@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetConfirmation } = require('../utils/emailService');
@@ -25,15 +25,10 @@ const signup = async (req, res) => {
     const user = new User({ name, email, password, role: role || 'employee', company });
     await user.save();
 
-    // Send welcome email and wait for it to complete
-    try {
-      await sendWelcomeEmail(user);
-      console.log('[Auth] ✓ Welcome email sent successfully to:', user.email);
-    } catch (emailError) {
-      console.error('[Auth] ✗ Failed to send welcome email to', user.email, 'but user was created.');
-      console.error('[Auth] Email Error:', emailError.message);
-      // Optional: Decide if you want to return an error to the user if email fails
-    }
+    // Send welcome email asynchronously (non-blocking)
+    sendWelcomeEmail(user).catch(error => 
+      console.error('Welcome email failed for:', user.email, error.message)
+    );
 
     const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
                            process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -94,48 +89,37 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     
     if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
+      return res.status(400).json({ success: false, error: 'User does not exist' });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000;
-    await user.save();
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     try {
       await sendPasswordResetEmail(user, resetToken);
-      res.json({ success: true, message: 'Password reset email sent' });
+      res.json({ success: true, message: 'Reset link sent to your email' });
     } catch (emailError) {
       console.error('Failed to send reset email:', emailError);
-      res.status(500).json({ success: false, error: 'Failed to send reset email' });
+      res.status(500).json({ success: false, error: 'Failed to send reset link' });
     }
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.log(error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
 const resetPassword = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, error: errors.array()[0].msg });
-    }
+    const { resetToken } = req.params;
+    const { password } = req.body;
 
-    const { token, password } = req.body;
-    
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
+    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.findByIdAndUpdate(decoded.id, { password: hashedPassword }, { new: true });
 
     if (!user) {
-      return res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
-
-    user.password = password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
 
     try {
       await sendPasswordResetConfirmation(user);
@@ -143,9 +127,10 @@ const resetPassword = async (req, res) => {
       console.error('Failed to send confirmation email:', emailError);
     }
 
-    res.json({ success: true, message: 'Password reset successful' });
+    res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.log(error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
