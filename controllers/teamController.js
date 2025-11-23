@@ -1,14 +1,16 @@
 const { validationResult } = require('express-validator');
+const crypto = require('crypto');
 const User = require('../models/User');
 const Task = require('../models/Task');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 const getEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: 'employee' }).select('-password');
+    const employees = await User.find({ role: 'employee', company: req.user.company }).select('-password');
     
     const employeesWithStats = await Promise.all(employees.map(async (employee) => {
-      const tasksAssigned = await Task.countDocuments({ assigned_to: employee._id });
-      const tasksCompleted = await Task.countDocuments({ assigned_to: employee._id, status: 'completed' });
+      const tasksAssigned = await Task.countDocuments({ assigned_to: employee._id, company: req.user.company });
+      const tasksCompleted = await Task.countDocuments({ assigned_to: employee._id, status: 'completed', company: req.user.company });
       
       return {
         id: employee._id,
@@ -29,11 +31,12 @@ const getEmployees = async (req, res) => {
 
 const getPerformance = async (req, res) => {
   try {
-    const totalTasks = await Task.countDocuments();
-    const completedTasks = await Task.countDocuments({ status: 'completed' });
-    const pendingTasks = await Task.countDocuments({ status: 'pending' });
-    const inProgressTasks = await Task.countDocuments({ status: 'in-progress' });
-    const overdueTasks = await Task.countDocuments({ status: 'overdue' });
+    const companyFilter = { company: req.user.company };
+    const totalTasks = await Task.countDocuments(companyFilter);
+    const completedTasks = await Task.countDocuments({ ...companyFilter, status: 'completed' });
+    const pendingTasks = await Task.countDocuments({ ...companyFilter, status: 'pending' });
+    const inProgressTasks = await Task.countDocuments({ ...companyFilter, status: 'in-progress' });
+    const overdueTasks = await Task.countDocuments({ ...companyFilter, status: 'overdue' });
 
     res.json({
       success: true,
@@ -60,7 +63,8 @@ const assignTask = async (req, res) => {
 
     const task = new Task({
       ...req.body,
-      created_by: req.user._id
+      created_by: req.user._id,
+      company: req.user.company
     });
     
     await task.save();
@@ -72,8 +76,45 @@ const assignTask = async (req, res) => {
   }
 };
 
+const inviteUser = async (req, res) => {
+  try {
+    const { email, role = 'employee' } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: 'User already exists' });
+    }
+
+    const tempPassword = crypto.randomBytes(12).toString('hex');
+    const user = new User({
+      name: email.split('@')[0],
+      email,
+      password: tempPassword,
+      role,
+      company: req.user.company
+    });
+    
+    await user.save();
+
+    try {
+      await sendWelcomeEmail(user, tempPassword);
+      res.json({ success: true, message: 'User invited successfully' });
+    } catch (emailError) {
+      await User.findByIdAndDelete(user._id);
+      res.status(500).json({ success: false, error: 'Failed to send invitation email' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
 module.exports = {
   getEmployees,
   getPerformance,
-  assignTask
+  assignTask,
+  inviteUser
 };

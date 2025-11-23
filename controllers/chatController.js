@@ -3,28 +3,8 @@ const Message = require('../models/Message');
 
 const getMessages = async (req, res) => {
   try {
-    const { recipient_id } = req.query;
-    let query = {};
-
-    if (recipient_id) {
-      query = {
-        $or: [
-          { sender_id: req.user._id, recipient_id },
-          { sender_id: recipient_id, recipient_id: req.user._id }
-        ]
-      };
-    } else {
-      query = {
-        $or: [
-          { sender_id: req.user._id },
-          { recipient_id: req.user._id }
-        ]
-      };
-    }
-
-    const messages = await Message.find(query)
+    const messages = await Message.find({ company: req.user.company })
       .populate('sender_id', 'name')
-      .populate('recipient_id', 'name')
       .sort({ createdAt: 1 });
 
     res.json({ success: true, data: messages });
@@ -42,12 +22,12 @@ const sendMessage = async (req, res) => {
 
     const message = new Message({
       sender_id: req.user._id,
-      recipient_id: req.body.recipient_id,
-      message: req.body.message
+      message: req.body.message,
+      company: req.user.company
     });
 
     await message.save();
-    await message.populate(['sender_id', 'recipient_id'], 'name');
+    await message.populate('sender_id', 'name');
 
     res.status(201).json({ success: true, data: message });
   } catch (error) {

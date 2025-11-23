@@ -11,14 +11,18 @@ const signup = async (req, res) => {
       return res.status(400).json({ success: false, error: errors.array()[0].msg });
     }
 
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, company } = req.body;
+    
+    if (!company) {
+      return res.status(400).json({ success: false, error: 'Company is required' });
+    }
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
-    const user = new User({ name, email, password, role: role || 'employee' });
+    const user = new User({ name, email, password, role: role || 'employee', company });
     await user.save();
 
     try {
@@ -27,13 +31,13 @@ const signup = async (req, res) => {
       console.error('Failed to send welcome email:', emailError);
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, 
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
                            process.env.JWT_SECRET, { expiresIn: '24h' });
 
     res.status(201).json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
@@ -54,13 +58,13 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, 
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
                            process.env.JWT_SECRET, { expiresIn: '24h' });
 
     res.json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
@@ -70,7 +74,7 @@ const login = async (req, res) => {
 const getCurrentUser = async (req, res) => {
   res.json({
     success: true,
-    user: { id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role }
+    user: { id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, company: req.user.company }
   });
 };
 

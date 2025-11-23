@@ -5,7 +5,7 @@ const TaskFile = require('../models/TaskFile');
 const getTasks = async (req, res) => {
   try {
     const { status, tab } = req.query;
-    let query = {};
+    let query = { company: req.user.company };
 
     if (req.user.role === 'employee') {
       query.assigned_to = req.user._id;
@@ -41,7 +41,8 @@ const createTask = async (req, res) => {
 
     const task = new Task({
       ...req.body,
-      created_by: req.user._id
+      created_by: req.user._id,
+      company: req.user.company
     });
     
     await task.save();
@@ -55,7 +56,7 @@ const createTask = async (req, res) => {
 
 const getTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id)
+    const task = await Task.findOne({ _id: req.params.id, company: req.user.company })
       .populate('assigned_to', 'name')
       .populate('created_by', 'name');
     
@@ -75,7 +76,7 @@ const getTask = async (req, res) => {
 
 const updateTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, company: req.user.company });
     if (!task) {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
@@ -84,7 +85,11 @@ const updateTask = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    const updatedTask = await Task.findOneAndUpdate(
+      { _id: req.params.id, company: req.user.company }, 
+      req.body, 
+      { new: true }
+    )
       .populate('assigned_to', 'name')
       .populate('created_by', 'name');
 

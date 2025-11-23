@@ -25,7 +25,7 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
-const sendWelcomeEmail = async (user) => {
+const sendWelcomeEmail = async (user, tempPassword = null) => {
   const html = `
     <!DOCTYPE html>
     <html>
@@ -51,8 +51,31 @@ const sendWelcomeEmail = async (user) => {
           <h2 style="color: #1a202c; margin: 0 0 16px; font-size: 24px; font-weight: 600;">Hello ${user.name}! </h2>
           
           <p style="color: #4a5568; line-height: 1.6; margin: 0 0 24px; font-size: 16px;">
-            We're thrilled to have you join our community of productive professionals. Your account has been successfully created and you're ready to transform how you manage tasks.
+            ${tempPassword ? 
+              `You've been invited to join TaskFlow! Your account has been created and you can start collaborating with your team right away.` : 
+              `We're thrilled to have you join our community of productive professionals. Your account has been successfully created and you're ready to transform how you manage tasks.`
+            }
           </p>
+          
+          ${tempPassword ? `
+          <!-- Temporary Password Card -->
+          <div style="background: #fef5e7; border: 1px solid #f6e05e; border-radius: 8px; padding: 24px; margin: 24px 0;">
+            <h3 style="color: #744210; margin: 0 0 16px; font-size: 18px; font-weight: 600;">Your Login Credentials</h3>
+            <div style="display: grid; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #744210; font-weight: 500;">Email:</span>
+                <span style="color: #744210; font-weight: 600; font-family: monospace;">${user.email}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #744210; font-weight: 500;">Temporary Password:</span>
+                <span style="color: #744210; font-weight: 600; font-family: monospace; background: rgba(116, 66, 16, 0.1); padding: 4px 8px; border-radius: 4px;">${tempPassword}</span>
+              </div>
+            </div>
+            <p style="color: #744210; margin: 16px 0 0; font-size: 14px; font-style: italic;">
+              ⚠️ Please change this password after your first login for security.
+            </p>
+          </div>
+          ` : ''}
           
           <!-- Account Card -->
           <div style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin: 24px 0;">
@@ -117,7 +140,11 @@ const sendWelcomeEmail = async (user) => {
     </html>
   `;
   
-  await sendEmail(user.email, '🎉 Welcome to TaskFlow - Let\'s Get Started!', html);
+  const subject = tempPassword ? 
+    '🎉 You\'re Invited to TaskFlow - Get Started!' : 
+    '🎉 Welcome to TaskFlow - Let\'s Get Started!';
+  
+  await sendEmail(user.email, subject, html);
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
