@@ -55,13 +55,22 @@ router.get('/', auth, async (req, res) => {
 // Create task
 router.post('/', auth, async (req, res) => {
   try {
+    let assigned_to = req.user._id;
+    
+    if (req.body.assigned_to) {
+      const assignedUser = await User.findOne({ username: req.body.assigned_to, company: req.user.company });
+      if (assignedUser) {
+        assigned_to = assignedUser._id;
+      }
+    }
+    
     const task = await Task.create({
       title: req.body.title || 'Default Task',
       description: req.body.description || '',
       priority: req.body.priority || 'medium',
-      assigned_to: req.body.assigned_to || req.user._id,
+      assigned_to,
       created_by: req.user._id,
-      company: req.user.company || 'default'
+      company: req.user.company
     });
     
     res.json({ success: true, data: task });
