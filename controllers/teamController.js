@@ -100,13 +100,12 @@ const inviteUser = async (req, res) => {
     
     await user.save();
 
-    try {
-      await sendWelcomeEmail(user, tempPassword);
-      res.json({ success: true, message: 'User invited successfully' });
-    } catch (emailError) {
-      await User.findByIdAndDelete(user._id);
-      res.status(500).json({ success: false, error: 'Failed to send invitation email' });
-    }
+    // Send invite email asynchronously
+    sendWelcomeEmail(user, tempPassword).catch(emailError => {
+      console.error('Failed to send invitation email:', emailError);
+    });
+    
+    res.json({ success: true, message: 'User invited successfully' });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
