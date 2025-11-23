@@ -43,6 +43,7 @@ const getPerformance = async (req, res) => {
     
     // Get all tasks for the company
     const allTasks = await Task.find({ company: req.user.company }).lean();
+    console.log(`Found ${allTasks.length} tasks for company: ${req.user.company}`);
     
     // Calculate stats
     const totalTasks = allTasks.length;
@@ -57,17 +58,21 @@ const getPerformance = async (req, res) => {
       task.status !== 'completed'
     ).length;
 
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    console.log(`Performance stats: ${completedTasks}/${totalTasks} = ${completionRate}%`);
+
     const data = {
       total_tasks: totalTasks,
       completed_tasks: completedTasks,
       pending_tasks: pendingTasks,
       in_progress_tasks: inProgressTasks,
       overdue_tasks: overdueTasks,
-      completion_rate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+      completion_rate: completionRate
     };
 
     res.json({ success: true, data });
   } catch (error) {
+    console.error('Performance calculation error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
@@ -90,8 +95,10 @@ const assignTask = async (req, res) => {
       company: req.user.company
     });
     
+    console.log(`Task created: ${task.title} for company: ${req.user.company}`);
     res.status(201).json({ success: true, data: task });
   } catch (error) {
+    console.error('Task creation error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
