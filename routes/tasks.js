@@ -181,4 +181,87 @@ router.get('/:id/files', auth, async (req, res) => {
   }
 });
 
+// Get employee performance stats
+router.get('/performance/stats', auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const now = new Date();
+    
+    // Get all tasks for the employee
+    const allTasks = await Task.find({ assigned_to: userId, company: req.user.company }).lean();
+    
+    // Calculate stats
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter(task => task.status === 'completed').length;
+    const onTimeCompleted = allTasks.filter(task => 
+      task.status === 'completed' && 
+      task.due_date && 
+      task.updatedAt <= new Date(task.due_date)
+    ).length;
+    
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const onTimeRate = completedTasks > 0 ? Math.round((onTimeCompleted / completedTasks) * 100) : 0;
+    
+    // Calculate performance score (A+, A, B, C)
+    let performanceScore = 'N/A';
+    if (totalTasks > 0) {
+      const score = (completionRate * 0.7) + (onTimeRate * 0.3);
+      performanceScore = score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B' : 'C';
+    }
+    
+    // Calculate streak (consecutive days with completed tasks)
+    const completedByDate = {};
+    allTasks.filter(task => task.status === 'completed' && task.updatedAt).forEach(task => {
+      const date = new Date(task.updatedAt).toDateString();
+      completedByDate[date] = true;
+    });
+    
+    let streak = 0;
+    const currentDate = new Date();
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(checkDate.getDate() - i);
+      if (completedByDate[checkDate.toDateString()]) {
+        streak++;
+      } else if (i > 0) {
+        break;
+      }
+    }
+    
+    // Generate weekly performance trend (last 4 weeks)
+    const weeklyData = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - (i * 7) - 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      
+      const weekTasks = allTasks.filter(task => {
+        const taskDate = new Date(task.updatedAt);
+        return taskDate >= weekStart && taskDate < weekEnd && task.status === 'completed';
+      }).length;
+      
+      weeklyData.push({
+        name: `Week ${4 - i}`,
+        value: weekTasks
+      });
+    }
+    
+    const data = {
+      total_tasks: totalTasks,
+      completed_tasks: completedTasks,
+      completion_rate: completionRate,
+      on_time_completion: onTimeRate,
+      performance_score: performanceScore,
+      streak_days: streak,
+      weekly_performance: weeklyData
+    };
+    
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Performance stats error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 module.exports = router;
