@@ -39,11 +39,23 @@ const getEmployees = async (req, res) => {
 
 const getPerformance = async (req, res) => {
   try {
-    const totalTasks = await Task.countDocuments({ company: req.user.company });
-    const completedTasks = await Task.countDocuments({ company: req.user.company, status: 'completed' });
-    const pendingTasks = await Task.countDocuments({ company: req.user.company, status: 'pending' });
-    const inProgressTasks = await Task.countDocuments({ company: req.user.company, status: 'in-progress' });
-    const overdueTasks = await Task.countDocuments({ company: req.user.company, status: 'overdue' });
+    const now = new Date();
+    
+    // Get all tasks for the company
+    const allTasks = await Task.find({ company: req.user.company }).lean();
+    
+    // Calculate stats
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter(task => task.status === 'completed').length;
+    const pendingTasks = allTasks.filter(task => task.status === 'pending').length;
+    const inProgressTasks = allTasks.filter(task => task.status === 'in-progress').length;
+    
+    // Calculate overdue tasks (past due date and not completed)
+    const overdueTasks = allTasks.filter(task => 
+      task.due_date && 
+      new Date(task.due_date) < now && 
+      task.status !== 'completed'
+    ).length;
 
     const data = {
       total_tasks: totalTasks,
