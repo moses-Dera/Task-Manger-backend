@@ -3,10 +3,16 @@ const multer = require('multer');
 const { body, validationResult } = require('express-validator');
 const Task = require('../models/Task');
 const TaskFile = require('../models/TaskFile');
+const User = require('../models/User');
 const { auth, authorize } = require('../middleware/auth');
 const { cacheResponse, invalidateCache } = require('../middleware/cache');
 
 const router = express.Router();
+
+// Test route
+router.get('/test', auth, (req, res) => {
+  res.json({ success: true, message: 'Tasks API working', user: req.user.name });
+});
 
 // File upload configuration
 const storage = multer.diskStorage({
@@ -17,11 +23,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Get tasks with caching
-router.get('/', auth, cacheResponse(60), async (req, res) => {
+// Get tasks
+router.get('/', auth, async (req, res) => {
   try {
     const { status, tab } = req.query;
-    let query = {};
+    let query = { company: req.user.company };
 
     if (req.user.role === 'employee') {
       query.assigned_to = req.user._id;
@@ -45,35 +51,44 @@ router.get('/', auth, cacheResponse(60), async (req, res) => {
 
     res.json({ success: true, data: tasks });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Get tasks error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch tasks' });
   }
 });
 
-// Create task
-router.post('/', auth, authorize('admin', 'manager'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('assigned_to').notEmpty().withMessage('Assigned user is required')
-], async (req, res) => {
+// Create task - simplified
+router.post('/', auth, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    console.log('=== SIMPLE TASK CREATION ===');
+    console.log('Body:', req.body);
+    console.log('User:', req.user.name, req.user.role);
+
+    if (!req.body.title) {
+      return res.status(400).json({ success: false, error: 'Title is required' });
+    }
+    
+    if (!req.body.assigned_to) {
+      return res.status(400).json({ success: false, error: 'Assigned user is required' });
     }
 
     const task = new Task({
-      ...req.body,
-      created_by: req.user._id
+      title: req.body.title,
+      description: req.body.description || '',
+      priority: req.body.priority || 'medium',
+      due_date: req.body.due_date,
+      assigned_to: req.body.assigned_to,
+      created_by: req.user._id,
+      company: req.user.company,
+      status: 'pending'
     });
     
     await task.save();
-    await task.populate(['assigned_to', 'created_by'], 'name');
-    
-    // Invalidate cache when task is created
-    await invalidateCache('/api/tasks*');
+    console.log('Task saved:', task._id);
     
     res.status(201).json({ success: true, data: task });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Task creation error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

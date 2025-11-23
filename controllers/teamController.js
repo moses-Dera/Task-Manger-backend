@@ -50,7 +50,8 @@ const getEmployees = async (req, res) => {
 
     res.json({ success: true, data: employeesWithStats });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Get employees error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch employees' });
   }
 };
 
@@ -75,7 +76,8 @@ const getPerformance = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Get performance error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch performance data' });
   }
 };
 
@@ -83,21 +85,58 @@ const assignTask = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Team assign validation errors:', errors.array());
       return res.status(400).json({ success: false, error: errors.array()[0].msg });
     }
 
-    const task = new Task({
-      ...req.body,
-      created_by: req.user._id,
+    console.log('=== TEAM ASSIGN TASK DEBUG ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Manager info:', {
+      id: req.user._id,
+      role: req.user.role,
       company: req.user.company
     });
+
+    // Verify assigned_to user exists and is in same company
+    const assignedUser = await User.findById(req.body.assigned_to);
+    if (!assignedUser) {
+      console.log('Team assign - user not found:', req.body.assigned_to);
+      return res.status(400).json({ success: false, error: 'Employee not found' });
+    }
     
+    if (assignedUser.company !== req.user.company) {
+      console.log('Team assign - company mismatch');
+      return res.status(400).json({ success: false, error: 'Cannot assign task to employee from different company' });
+    }
+
+    const taskData = {
+      title: req.body.title,
+      description: req.body.description || '',
+      priority: req.body.priority || 'medium',
+      due_date: req.body.due_date,
+      assigned_to: req.body.assigned_to,
+      created_by: req.user._id,
+      company: req.user.company,
+      status: 'pending'
+    };
+
+    console.log('Team task data:', JSON.stringify(taskData, null, 2));
+
+    const task = new Task(taskData);
     await task.save();
-    await task.populate(['assigned_to', 'created_by'], 'name');
     
-    res.status(201).json({ success: true, data: task });
+    const populatedTask = await Task.findById(task._id)
+      .populate('assigned_to', 'name email')
+      .populate('created_by', 'name email');
+    
+    console.log('Team task created:', populatedTask._id);
+    
+    res.status(201).json({ success: true, data: populatedTask });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('=== TEAM ASSIGN ERROR ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ success: false, error: 'Failed to assign task: ' + error.message });
   }
 };
 
@@ -129,44 +168,22 @@ const inviteUser = async (req, res) => {
     console.log(`[TEAM] 🔑 Temporary password: ${tempPassword}`);
     console.log(`[TEAM] 🏢 Company: ${req.user.company}`);
     
-    // Send invite email with better error handling
-    try {
-      await sendWelcomeEmail(user, tempPassword, true);
-      console.log(`[TEAM] ✅ Invitation email sent successfully to: ${email}`);
-      
-      res.json({ 
-        success: true, 
-        message: 'User invited successfully! Invitation email sent.',
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          tempPassword: tempPassword // Include in response for debugging
-        }
-      });
-    } catch (emailError) {
-      console.error(`[TEAM] ❌ Failed to send invitation email to ${email}`);
-      console.error(`[TEAM] Email Error Details:`, {
-        code: emailError.code,
-        message: emailError.message,
-        command: emailError.command
-      });
-      
-      // Still return success but with email warning
-      res.json({ 
-        success: true, 
-        message: `User invited successfully! However, email delivery failed. Please share these credentials manually:\n\nEmail: ${email}\nTemporary Password: ${tempPassword}`,
-        emailError: true,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          tempPassword: tempPassword
-        }
-      });
-    }
+    // Send invite email asynchronously (non-blocking)
+    sendWelcomeEmail(user).catch(error => 
+      console.error('Invitation email failed for:', user.email, error.message)
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'User invited successfully! Invitation email sent.',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        tempPassword: tempPassword
+      }
+    });
     
   } catch (error) {
     console.error('[TEAM] Invite error:', error);

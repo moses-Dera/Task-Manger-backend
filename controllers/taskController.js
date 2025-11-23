@@ -28,7 +28,8 @@ const getTasks = async (req, res) => {
 
     res.json({ success: true, data: tasks });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Get tasks error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch tasks' });
   }
 };
 
@@ -46,11 +47,15 @@ const createTask = async (req, res) => {
     });
     
     await task.save();
-    await task.populate(['assigned_to', 'created_by'], 'name');
     
-    res.status(201).json({ success: true, data: task });
+    const populatedTask = await Task.findById(task._id)
+      .populate('assigned_to', 'name')
+      .populate('created_by', 'name');
+    
+    res.status(201).json({ success: true, data: populatedTask });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Task creation error:', error);
+    res.status(500).json({ success: false, error: 'Failed to create task' });
   }
 };
 
@@ -95,7 +100,8 @@ const updateTask = async (req, res) => {
 
     res.json({ success: true, data: updatedTask });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Update task error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update task' });
   }
 };
 
