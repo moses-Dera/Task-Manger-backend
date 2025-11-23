@@ -125,13 +125,21 @@ const inviteUser = async (req, res) => {
     
     await user.save();
 
+    console.log(`[Team] Inviting user: ${email} with role: ${role}`);
+    
     // Send invite email asynchronously
-    sendWelcomeEmail(user, tempPassword).catch(emailError => {
-      console.error('Failed to send invitation email:', emailError);
-    });
+    sendWelcomeEmail(user, tempPassword)
+      .then(() => {
+        console.log('[Team] ✓ Invitation email sent successfully to:', email);
+      })
+      .catch(emailError => {
+        console.error('[Team] ✗ Failed to send invitation email to', email);
+        console.error('[Team] Email Error:', emailError.message);
+      });
     
     res.json({ success: true, message: 'User invited successfully' });
   } catch (error) {
+    console.error('[Team] Invite error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

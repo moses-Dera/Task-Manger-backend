@@ -34,18 +34,32 @@ transporter.verify((error, success) => {
 
 const sendEmail = async (to, subject, html) => {
   try {
-    console.log(`Attempting to send email to: ${to}, subject: ${subject}`);
+    console.log(`\n[EMAIL] Attempting to send email:`);
+    console.log(`  To: ${to}`);
+    console.log(`  Subject: ${subject}`);
+    console.log(`  From: ${process.env.EMAIL_FROM}`);
+    
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to,
       subject,
       html
     });
-    console.log('Email sent successfully:', info.messageId);
+    
+    console.log(`[EMAIL] ✓ Email sent successfully!`);
+    console.log(`  Message ID: ${info.messageId}`);
+    console.log(`  Response: ${info.response}\n`);
     return info;
   } catch (error) {
-    console.error('Email sending failed for', to, ':', error.message);
-    console.error('Full error:', error);
+    console.error(`[EMAIL] ✗ Email sending FAILED for ${to}`);
+    console.error(`  Error Code: ${error.code}`);
+    console.error(`  Error Message: ${error.message}`);
+    console.error(`  Error Details:`, error);
+    console.error(`\n[EMAIL] Troubleshooting:`);
+    console.error(`  - Check EMAIL_HOST: ${process.env.EMAIL_HOST}`);
+    console.error(`  - Check EMAIL_PORT: ${process.env.EMAIL_PORT}`);
+    console.error(`  - Check EMAIL_USER: ${process.env.EMAIL_USER?.substring(0, 5)}...`);
+    console.error(`  - Check EMAIL_SECURE: ${process.env.EMAIL_SECURE}\n`);
     throw error;
   }
 };

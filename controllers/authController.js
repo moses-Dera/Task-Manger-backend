@@ -25,12 +25,15 @@ const signup = async (req, res) => {
     const user = new User({ name, email, password, role: role || 'employee', company });
     await user.save();
 
-    // Send welcome email asynchronously (don't wait for it)
-    sendWelcomeEmail(user).catch(emailError => {
-      console.error('Failed to send welcome email:', emailError.message);
-    }).then(() => {
-      console.log('Welcome email sent successfully to:', user.email);
-    });
+    // Send welcome email asynchronously but log any errors
+    sendWelcomeEmail(user)
+      .then(() => {
+        console.log('[Auth] ✓ Welcome email sent successfully to:', user.email);
+      })
+      .catch(emailError => {
+        console.error('[Auth] ✗ Failed to send welcome email to', user.email);
+        console.error('[Auth] Email Error:', emailError.message);
+      });
 
     const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
                            process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -41,6 +44,7 @@ const signup = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company }
     });
   } catch (error) {
+    console.error('[Auth] Signup error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
