@@ -5,7 +5,7 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.BREVO_EMAIL,
+    user: '9c5509001@smtp-brevo.com',
     pass: process.env.BREVO_API_KEY,
   },
   connectionTimeout: 10000,
@@ -17,7 +17,7 @@ const sendEmail = async (to, subject, html) => {
   try {
     console.log(`Attempting to send email to: ${to}`);
     const result = await transporter.sendMail({
-      from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
+      from: `"TaskFlow" <${process.env.BREVO_EMAIL}>`,
       to,
       subject,
       html
