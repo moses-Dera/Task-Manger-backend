@@ -41,7 +41,7 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
-const sendWelcomeEmail = async (user) => {
+const sendWelcomeEmail = async (user, tempPassword = null) => {
   const subject = 'Welcome to TaskFlow';
   const html = `
     <h1>Welcome to TaskFlow!</h1>
@@ -50,6 +50,8 @@ const sendWelcomeEmail = async (user) => {
     <p>Your account has been created successfully.</p>
     <p>Role: ${user.role}</p>
     <p>Company: ${user.company}</p>
+    ${tempPassword ? `<p><strong>Temporary Password:</strong> ${tempPassword}</p>` : ''}
+    <p>Please login and change your password immediately.</p>
   `;
   return sendEmail(user.email, subject, html);
 };
