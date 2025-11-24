@@ -15,6 +15,7 @@ const sendEmail = async (to, subject, html) => {
   console.log(`To: ${to}`);
   console.log(`Subject: ${subject}`);
   console.log(`From: ${DEFAULT_SENDER_EMAIL}`);
+  console.log(`API Token: ${process.env.MAILERSEND_API_TOKEN ? 'Set ✓' : 'Missing ✗'}`);
 
   if (!process.env.MAILERSEND_API_TOKEN) {
     console.error('❌ MAILERSEND_API_TOKEN is missing in .env');
@@ -31,15 +32,19 @@ const sendEmail = async (to, subject, html) => {
       .setSubject(subject)
       .setHtml(html);
 
+    console.log('Sending email via MailerSend API...');
     const response = await mailerSend.email.send(emailParams);
 
     console.log('✅ Email sent successfully!');
-    console.log('Response:', response);
+    console.log('Response:', JSON.stringify(response, null, 2));
     return { success: true, response };
 
   } catch (err) {
-    console.error('❌ Error sending email:', err.message);
-    throw err;
+    console.error('❌ MailerSend Error Details:');
+    console.error('Error message:', err.message);
+    console.error('Error body:', err.body);
+    console.error('Full error:', JSON.stringify(err, null, 2));
+    throw new Error(err.body?.message || err.message || 'Failed to send email');
   }
 };
 
