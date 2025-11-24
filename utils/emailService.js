@@ -28,7 +28,7 @@ const sendEmail = async (to, subject, html) => {
 
     if (error) {
       console.error('❌ Resend API Error:', error);
-      return { success: false, error };
+      throw new Error(error.message || 'Failed to send email');
     }
 
     console.log('✅ Email sent successfully!');
@@ -37,7 +37,7 @@ const sendEmail = async (to, subject, html) => {
 
   } catch (err) {
     console.error('❌ Unexpected Error sending email:', err.message);
-    return { success: false, error: err.message };
+    throw err;
   }
 };
 
