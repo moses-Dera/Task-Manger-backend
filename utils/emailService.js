@@ -5,7 +5,7 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: '9c5509001@smtp-brevo.com',
+    user: process.env.BREVO_LOGIN,
     pass: process.env.BREVO_API_KEY,
   },
   connectionTimeout: 10000,
