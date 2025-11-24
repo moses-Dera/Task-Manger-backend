@@ -1,40 +1,41 @@
-const nodemailer = require('nodemailer');
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 require('dotenv').config();
 
-// Create transporter for Gmail
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  requireTLS: true
+// Initialize MailerSend
+const mailerSend = new MailerSend({
+  apiKey: process.env.MAILERSEND_API_TOKEN,
 });
 
+// Default sender email
+const DEFAULT_SENDER_EMAIL = process.env.EMAIL_FROM || 'noreply@TaskFlow.com.ng';
+const DEFAULT_SENDER_NAME = 'TaskFlow';
+
 const sendEmail = async (to, subject, html) => {
-  console.log(`\n=== EMAIL SEND ATTEMPT (Gmail SMTP) ===`);
+  console.log(`\n=== EMAIL SEND ATTEMPT (MailerSend) ===`);
   console.log(`To: ${to}`);
   console.log(`Subject: ${subject}`);
-  console.log(`From: ${process.env.EMAIL_USER}`);
+  console.log(`From: ${DEFAULT_SENDER_EMAIL}`);
 
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('❌ EMAIL_USER or EMAIL_PASS is missing in .env');
-    throw new Error('Email credentials not configured');
+  if (!process.env.MAILERSEND_API_TOKEN) {
+    console.error('❌ MAILERSEND_API_TOKEN is missing in .env');
+    throw new Error('Email service not configured');
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
-      to: to,
-      subject: subject,
-      html: html,
-    });
+    const sentFrom = new Sender(DEFAULT_SENDER_EMAIL, DEFAULT_SENDER_NAME);
+    const recipients = [new Recipient(to)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject(subject)
+      .setHtml(html);
+
+    const response = await mailerSend.email.send(emailParams);
 
     console.log('✅ Email sent successfully!');
-    console.log('Message ID:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    console.log('Response:', response);
+    return { success: true, response };
 
   } catch (err) {
     console.error('❌ Error sending email:', err.message);
