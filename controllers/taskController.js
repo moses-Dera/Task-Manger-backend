@@ -1,6 +1,8 @@
 const { validationResult } = require('express-validator');
 const Task = require('../models/Task');
 const TaskFile = require('../models/TaskFile');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 const getTasks = async (req, res) => {
   try {
@@ -12,7 +14,7 @@ const getTasks = async (req, res) => {
     }
 
     if (status) query.status = status;
-    
+
     if (tab === 'today') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -45,13 +47,32 @@ const createTask = async (req, res) => {
       created_by: req.user._id,
       company: req.user.company
     });
-    
+
     await task.save();
-    
+
     const populatedTask = await Task.findById(task._id)
       .populate('assigned_to', 'name')
       .populate('created_by', 'name');
-    
+
+    // Create notification for assigned employee
+    try {
+      const assignedUser = await User.findById(req.body.assigned_to);
+      if (assignedUser) {
+        const notification = new Notification({
+          user_id: assignedUser._id,
+          title: 'New Task Assigned',
+          message: `You have been assigned a new task: "${task.title}"`,
+          type: 'task',
+          read: false
+        });
+        await notification.save();
+        console.log('Notification created for user:', assignedUser.name);
+      }
+    } catch (notifError) {
+      console.error('Failed to create notification:', notifError);
+      // Don't fail the task creation if notification fails
+    }
+
     res.status(201).json({ success: true, data: populatedTask });
   } catch (error) {
     console.error('Task creation error:', error);
@@ -64,7 +85,7 @@ const getTask = async (req, res) => {
     const task = await Task.findOne({ _id: req.params.id, company: req.user.company })
       .populate('assigned_to', 'name')
       .populate('created_by', 'name');
-    
+
     if (!task) {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
@@ -91,8 +112,8 @@ const updateTask = async (req, res) => {
     }
 
     const updatedTask = await Task.findOneAndUpdate(
-      { _id: req.params.id, company: req.user.company }, 
-      req.body, 
+      { _id: req.params.id, company: req.user.company },
+      req.body,
       { new: true }
     )
       .populate('assigned_to', 'name')
