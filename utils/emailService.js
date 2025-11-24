@@ -1,31 +1,54 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
+  service: 'gmail',
   auth: {
-    user: process.env.BREVO_LOGIN,
-    pass: process.env.BREVO_API_KEY,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    console.log(`Attempting to send email to: ${to}`);
-    const result = await transporter.sendMail({
-      from: `"TaskFlow" <${process.env.BREVO_EMAIL}>`,
+    console.log(`\n=== EMAIL SEND ATTEMPT ===`);
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`From: ${process.env.EMAIL_USER}`);
+    console.log(`Auth User: ${process.env.EMAIL_USER}`);
+    console.log(`Auth Pass: ${process.env.EMAIL_PASS ? 'SET' : 'NOT SET'}`);
+    
+    const mailOptions = {
+      from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html
-    });
-    console.log(`Email sent successfully to ${to}:`, result.messageId);
-    return { success: true, messageId: result.messageId };
+    };
+    
+    console.log('Mail Options:', mailOptions);
+    
+    const result = await transporter.sendMail(mailOptions);
+    
+    console.log(`\n=== EMAIL SEND SUCCESS ===`);
+    console.log(`Message ID: ${result.messageId}`);
+    console.log(`Response: ${result.response}`);
+    console.log(`Accepted: ${result.accepted}`);
+    console.log(`Rejected: ${result.rejected}`);
+    console.log(`========================\n`);
+    
+    return { success: true, messageId: result.messageId, response: result.response };
   } catch (error) {
-    console.error(`Email failed to ${to}:`, error.message);
+    console.error(`\n=== EMAIL SEND FAILED ===`);
+    console.error(`To: ${to}`);
+    console.error(`Error:`, {
+      message: error.message,
+      code: error.code,
+      response: error.response,
+      responseCode: error.responseCode
+    });
+    console.error(`========================\n`);
     throw error;
   }
 };
@@ -45,7 +68,7 @@ const sendPasswordResetEmail = async (user, resetToken) => {
       <a href="${resetLink}" style="background-color: #1C64F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">Reset Password</a>
       <p>Or copy this link: ${resetLink}</p>
       <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this, please ignore this email.</p>
+      <p>If you didn't request this, please ignore this email.</p> 
     </div>
   `;
   return await sendEmail(user.email, "Reset Your TaskFlow Password", html);
@@ -69,8 +92,13 @@ const sendMeetingNotification = async (user, meetingData) => {
 };
 
 const testEmail = async (to) => {
-  const html = `<h1>Test Email</h1><p>This is a test email from TaskFlow. If you receive this, email service is working!</p>`;
-  return await sendEmail(to, "TaskFlow Test Email", html);
+  const html = `<h1>Test Email</h1><p>This is a simple test email from TaskFlow.</p><p>Time: ${new Date().toISOString()}</p>`;
+  return await sendEmail(to, "Simple Test - TaskFlow", html);
+};
+
+const sendSimpleEmail = async (to) => {
+  const html = `<p>Simple test message</p>`;
+  return await sendEmail(to, "Test", html);
 };
 
 module.exports = {
@@ -78,5 +106,6 @@ module.exports = {
   sendPasswordResetEmail,
   sendPasswordResetConfirmation,
   sendMeetingNotification,
-  testEmail
+  testEmail,
+  sendSimpleEmail
 };
