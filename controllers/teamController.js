@@ -133,9 +133,9 @@ const inviteUser = async (req, res) => {
     
     console.log('User created with email:', user.email);
     
-    // Send welcome email asynchronously
+    // Send welcome email with temporary password
     console.log('Sending welcome email to invited user:', user.email);
-    sendWelcomeEmail(user).then(() => {
+    sendWelcomeEmail(user, tempPassword).then(() => {
       console.log('Welcome email sent successfully to invited user:', user.email);
     }).catch(error => {
       console.error('Welcome email failed for invited user:', user.email, error.message);

@@ -53,9 +53,34 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
-const sendWelcomeEmail = async (user) => {
-  const html = `<h1>Welcome to TaskFlow!</h1><p>Hello ${user.name}, your account is ready.</p>`;
-  await sendEmail(user.email, "Welcome to TaskFlow", html);
+const sendWelcomeEmail = async (user, tempPassword = null) => {
+  const loginUrl = 'https://task-flow-rho-eight.vercel.app/login';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #1C64F2; text-align: center;">Welcome to TaskFlow!</h1>
+      <p>Hello ${user.name},</p>
+      <p>Your TaskFlow account has been created successfully. You can now access the platform to manage tasks and collaborate with your team.</p>
+      
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #333;">Your Account Details:</h3>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Role:</strong> ${user.role}</p>
+        ${tempPassword ? `<p><strong>Temporary Password:</strong> ${tempPassword}</p>` : ''}
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${loginUrl}" style="background-color: #1C64F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to TaskFlow</a>
+      </div>
+      
+      ${tempPassword ? '<p style="color: #666; font-size: 14px;"><em>Please change your password after your first login for security.</em></p>' : ''}
+      
+      <p>If you have any questions, please contact your team administrator.</p>
+      <p>Best regards,<br>The TaskFlow Team</p>
+    </div>
+  `;
+  
+  return await sendEmail(user.email, "Welcome to TaskFlow - Your Account is Ready!", html);
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
