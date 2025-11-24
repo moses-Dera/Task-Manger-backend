@@ -133,8 +133,13 @@ const inviteUser = async (req, res) => {
     
     console.log('User created with email:', user.email);
     
-    // Send email asynchronously
-    sendWelcomeEmail(user).catch(() => {});
+    // Send welcome email asynchronously
+    console.log('Sending welcome email to invited user:', user.email);
+    sendWelcomeEmail(user).then(() => {
+      console.log('Welcome email sent successfully to invited user:', user.email);
+    }).catch(error => {
+      console.error('Welcome email failed for invited user:', user.email, error.message);
+    });
     
     res.json({ 
       success: true, 

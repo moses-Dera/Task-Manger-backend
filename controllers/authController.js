@@ -26,9 +26,12 @@ const signup = async (req, res) => {
     await user.save();
 
     // Send welcome email asynchronously (non-blocking)
-    sendWelcomeEmail(user).catch(error => 
-      console.error('Welcome email failed for:', user.email, error.message)
-    );
+    console.log('Sending welcome email to:', user.email);
+    sendWelcomeEmail(user).then(() => {
+      console.log('Welcome email sent successfully to:', user.email);
+    }).catch(error => {
+      console.error('Welcome email failed for:', user.email, error.message);
+    });
 
     const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
                            process.env.JWT_SECRET, { expiresIn: '24h' });
