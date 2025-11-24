@@ -162,25 +162,193 @@ const sendPasswordResetEmail = async (user, resetToken) => {
 
   const subject = 'Password Reset Request';
   const html = `
-    <h1>Password Reset</h1>
-    <p>You requested a password reset.</p>
-    <p>Click the link below to reset your password:</p>
-    <a href="${resetUrl}">${resetUrl}</a>
-    <p>If you didn't request this, please ignore this email.</p>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Password Reset Request</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">Password Reset Request 🔐</h1>
+                </td>
+              </tr>
+              
+              <!-- Body -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: 600;">Hello ${user.name},</h2>
+                  
+                  <p style="margin: 0 0 20px 0; color: #555555; font-size: 16px; line-height: 1.6;">
+                    We received a request to reset your password for your TaskFlow account.
+                  </p>
+                  
+                  <p style="margin: 0 0 30px 0; color: #555555; font-size: 16px; line-height: 1.6;">
+                    Click the button below to reset your password:
+                  </p>
+                  
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <a href="${resetUrl}" 
+                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                          Reset Password
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Alternative Link -->
+                  <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+                    Or copy and paste this link into your browser:
+                  </p>
+                  <p style="margin: 10px 0 30px 0; color: #667eea; font-size: 14px; word-break: break-all;">
+                    <a href="${resetUrl}" style="color: #667eea; text-decoration: underline;">${resetUrl}</a>
+                  </p>
+                  
+                  <!-- Warning Box -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; margin: 20px 0;">
+                    <tr>
+                      <td style="padding: 15px;">
+                        <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.6;">
+                          ⚠️ <strong>Security Notice:</strong> If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <p style="margin: 20px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+                    This link will expire in 1 hour for security reasons.
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                  <p style="margin: 0 0 10px 0; color: #888888; font-size: 14px;">
+                    © ${new Date().getFullYear()} TaskFlow. All rights reserved.
+                  </p>
+                  <p style="margin: 0; color: #aaaaaa; font-size: 12px;">
+                    This is an automated message, please do not reply to this email.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
   `;
   return sendEmail(user.email, subject, html);
 };
 
 const sendMeetingNotification = async (user, meetingDetails) => {
-  const subject = 'New Team Meeting';
+  const subject = 'New Team Meeting Scheduled';
   const html = `
-    <h1>Team Meeting Notification</h1>
-    <p>Hello ${user.name},</p>
-    <p>A new meeting has been scheduled.</p>
-    <p><strong>Title:</strong> ${meetingDetails.title}</p>
-    <p><strong>Description:</strong> ${meetingDetails.description}</p>
-    <p><strong>Link:</strong> <a href="${meetingDetails.meeting_url}">Join Meeting</a></p>
-    <p>Scheduled by: ${meetingDetails.manager}</p>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Team Meeting Notification</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">Team Meeting Scheduled 📅</h1>
+                </td>
+              </tr>
+              
+              <!-- Body -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: 600;">Hello ${user.name},</h2>
+                  
+                  <p style="margin: 0 0 30px 0; color: #555555; font-size: 16px; line-height: 1.6;">
+                    A new team meeting has been scheduled. Please find the details below:
+                  </p>
+                  
+                  <!-- Meeting Details Box -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; margin: 30px 0;">
+                    <tr>
+                      <td style="padding: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px; font-weight: 600;">Meeting Details</h3>
+                        <table width="100%" cellpadding="8" cellspacing="0">
+                          <tr>
+                            <td style="color: #666666; font-size: 14px; font-weight: 600; width: 120px;">Title:</td>
+                            <td style="color: #333333; font-size: 14px;">${meetingDetails.title}</td>
+                          </tr>
+                          <tr>
+                            <td style="color: #666666; font-size: 14px; font-weight: 600;">Description:</td>
+                            <td style="color: #333333; font-size: 14px;">${meetingDetails.description}</td>
+                          </tr>
+                          <tr>
+                            <td style="color: #666666; font-size: 14px; font-weight: 600;">Scheduled by:</td>
+                            <td style="color: #333333; font-size: 14px;">${meetingDetails.manager}</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <p style="margin: 30px 0 20px 0; color: #555555; font-size: 16px; line-height: 1.6;">
+                    Click the button below to join the meeting:
+                  </p>
+                  
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <a href="${meetingDetails.meeting_url}" 
+                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                          Join Meeting
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Alternative Link -->
+                  <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+                    Or copy and paste this link into your browser:
+                  </p>
+                  <p style="margin: 10px 0 0 0; color: #667eea; font-size: 14px; word-break: break-all;">
+                    <a href="${meetingDetails.meeting_url}" style="color: #667eea; text-decoration: underline;">${meetingDetails.meeting_url}</a>
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                  <p style="margin: 0 0 10px 0; color: #888888; font-size: 14px;">
+                    © ${new Date().getFullYear()} TaskFlow. All rights reserved.
+                  </p>
+                  <p style="margin: 0; color: #aaaaaa; font-size: 12px;">
+                    This is an automated message, please do not reply to this email.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
   `;
   return sendEmail(user.email, subject, html);
 };
