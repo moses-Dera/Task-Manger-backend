@@ -24,13 +24,17 @@ const signup = async (req, res) => {
 
     const user = new User({ name, email, password, role: role || 'employee', company });
     await user.save();
+    
+    console.log('=== SIGNUP WELCOME EMAIL ===');
+    console.log('User created:', { id: user._id, name: user.name, email: user.email });
+    console.log('Attempting to send welcome email...');
 
     // Send welcome email asynchronously (non-blocking)
-    console.log('Sending welcome email to:', user.email);
     sendWelcomeEmail(user).then(() => {
-      console.log('Welcome email sent successfully to:', user.email);
+      console.log('✅ Signup welcome email sent successfully to:', user.email);
     }).catch(error => {
-      console.error('Welcome email failed for:', user.email, error.message);
+      console.error('❌ Signup welcome email failed for:', user.email);
+      console.error('Error details:', error.message);
     });
 
     const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
