@@ -271,6 +271,22 @@ const notifyTeamMeeting = async (req, res) => {
   }
 };
 
+const testEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+    
+    const { testEmail: sendTestEmail } = require('../utils/emailService');
+    await sendTestEmail(email);
+    
+    res.json({ success: true, message: 'Test email sent successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
   getEmployees,
   getPerformance,
@@ -278,5 +294,6 @@ module.exports = {
   inviteUser,
   updateUser,
   deleteUser,
-  notifyTeamMeeting
+  notifyTeamMeeting,
+  testEmail
 };

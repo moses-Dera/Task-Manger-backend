@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { auth, authorize } = require('../middleware/auth');
-const { getEmployees, getPerformance, assignTask, inviteUser, updateUser, deleteUser, notifyTeamMeeting } = require('../controllers/teamController');
+const { getEmployees, getPerformance, assignTask, inviteUser, updateUser, deleteUser, notifyTeamMeeting, testEmail } = require('../controllers/teamController');
 
 const router = express.Router();
 
@@ -30,5 +30,8 @@ router.delete('/users/:userId', auth, authorize('admin', 'manager'), deleteUser)
 
 // Notify team meeting
 router.post('/notify-meeting', auth, authorize('admin', 'manager'), notifyTeamMeeting);
+
+// Test email
+router.post('/test-email', auth, testEmail);
 
 module.exports = router;

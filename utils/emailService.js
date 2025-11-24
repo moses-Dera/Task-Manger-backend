@@ -68,9 +68,15 @@ const sendMeetingNotification = async (user, meetingData) => {
   await sendEmail(user.email, `Team Meeting: ${title}`, html);
 };
 
+const testEmail = async (to) => {
+  const html = `<h1>Test Email</h1><p>This is a test email from TaskFlow. If you receive this, email service is working!</p>`;
+  return await sendEmail(to, "TaskFlow Test Email", html);
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordResetConfirmation,
-  sendMeetingNotification
+  sendMeetingNotification,
+  testEmail
 };
