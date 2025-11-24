@@ -35,8 +35,12 @@ router.get('/', auth, async (req, res) => {
     const { status } = req.query;
     let query = { company: req.user.company };
 
+    console.log('=== TASK FETCH ===');
+    console.log('User:', { id: req.user._id, role: req.user.role, company: req.user.company });
+    
     if (req.user.role === 'employee') {
       query.assigned_to = req.user._id;
+      console.log('Employee query:', query);
     }
     if (status) query.status = status;
 
@@ -46,8 +50,12 @@ router.get('/', auth, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    console.log(`Found ${tasks.length} tasks for user`);
+    console.log('Tasks:', tasks.map(t => ({ id: t._id, title: t.title, assigned_to: t.assigned_to })));
+
     res.json({ success: true, data: tasks });
   } catch (error) {
+    console.error('Task fetch error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
