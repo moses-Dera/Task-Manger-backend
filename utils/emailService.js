@@ -1,83 +1,41 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+require('dotenv').config();
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+// Initialize Resend with API Key
+// If no key is provided, it will fail gracefully when trying to send
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Default sender: Use 'onboarding@resend.dev' for testing without a domain
+// Or use a verified domain if configured in .env
+const DEFAULT_SENDER = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 const sendEmail = async (to, subject, html) => {
-  try {
-    console.log(`\n=== EMAIL SEND ATTEMPT ===`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`From: ${process.env.EMAIL_USER}`);
-    console.log(`Auth User: ${process.env.EMAIL_USER}`);
-    console.log(`Auth Pass: ${process.env.EMAIL_PASS ? 'SET' : 'NOT SET'}`);
-    
-    const mailOptions = {
-      from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html
-    };
-    
-    console.log('Mail Options:', mailOptions);
-    
-    const result = await transporter.sendMail(mailOptions);
-    
-    console.log(`\n=== EMAIL SEND SUCCESS ===`);
-    console.log(`Message ID: ${result.messageId}`);
-    console.log(`Response: ${result.response}`);
-    console.log(`Accepted: ${result.accepted}`);
-    console.log(`Rejected: ${result.rejected}`);
-    console.log(`========================\n`);
-    
-    return { success: true, messageId: result.messageId, response: result.response };
-  } catch (error) {
-    console.error(`\n=== EMAIL SEND FAILED ===`);
-    console.error(`To: ${to}`);
-    console.error(`Error:`, {
-      message: error.message,
-      code: error.code,
-      response: error.response,
-      responseCode: error.responseCode
-    });
-    console.error(`========================\n`);
-    throw error;
-  }
-};
+  console.log(`\n=== EMAIL SEND ATTEMPT (Resend) ===`);
+  console.log(`To: ${to}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`From: ${DEFAULT_SENDER}`);
 
-const sendWelcomeEmail = async (user, tempPassword = null) => {
-  const loginUrl = 'https://task-flow-rho-eight.vercel.app/login';
-  
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h1 style="color: #1C64F2; text-align: center;">Welcome to TaskFlow!</h1>
-      <p>Hello ${user.name},</p>
-      <p>Your TaskFlow account has been created successfully. You can now access the platform to manage tasks and collaborate with your team.</p>
+  if (!process.env.RESEND_API_KEY) {
+    console.error('❌ RESEND_API_KEY is missing in .env');
+    return { success: false, error: 'Missing API Key' };
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: DEFAULT_SENDER,
+      to: to,
+      subject: subject,
+      html: html,
+    });
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${loginUrl}" style="background-color: #1C64F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to TaskFlow</a>
+    </div>
       
-      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h3 style="margin-top: 0; color: #333;">Your Account Details:</h3>
-        <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Role:</strong> ${user.role}</p>
-        ${tempPassword ? `<p><strong>Temporary Password:</strong> ${tempPassword}</p>` : ''}
-      </div>
-      
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${loginUrl}" style="background-color: #1C64F2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to TaskFlow</a>
-      </div>
-      
-      ${tempPassword ? '<p style="color: #666; font-size: 14px;"><em>Please change your password after your first login for security.</em></p>' : ''}
+      ${ tempPassword ? '<p style="color: #666; font-size: 14px;"><em>Please change your password after your first login for security.</em></p>' : '' }
       
       <p>If you have any questions, please contact your team administrator.</p>
       <p>Best regards,<br>The TaskFlow Team</p>
-    </div>
+    </div >
   `;
   
   return await sendEmail(user.email, "Welcome to TaskFlow - Your Account is Ready!", html);
@@ -85,7 +43,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
 
 const sendPasswordResetEmail = async (user, resetToken) => {
   const resetLink = `https://task-flow-rho-eight.vercel.app/reset-password?token=${resetToken}`;
-  const html = `
+const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h1 style="color: #1C64F2;">Reset Your Password</h1>
       <p>Hello ${user.name},</p>
@@ -96,7 +54,7 @@ const sendPasswordResetEmail = async (user, resetToken) => {
       <p>If you didn't request this, please ignore this email.</p> 
     </div>
   `;
-  return await sendEmail(user.email, "Reset Your TaskFlow Password", html);
+return await sendEmail(user.email, "Reset Your TaskFlow Password", html);
 };
 
 const sendPasswordResetConfirmation = async (user) => {
