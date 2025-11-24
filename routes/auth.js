@@ -41,7 +41,7 @@ router.post('/test-email', [
     };
     
     console.log('Testing email send to:', email);
-    await sendWelcomeEmail(testUser, 'TestPass123');
+    await sendWelcomeEmail(testUser);
     
     res.json({ 
       success: true, 
@@ -54,6 +54,25 @@ router.post('/test-email', [
       success: false, 
       error: 'Failed to send test email',
       details: error.message
+    });
+  }
+});
+
+// Direct welcome email test
+router.post('/test-welcome', async (req, res) => {
+  try {
+    const { sendSimpleEmail } = require('../utils/emailService');
+    await sendSimpleEmail('mosesjohnson706@gmail.com');
+    
+    res.json({ 
+      success: true, 
+      message: 'Simple test email sent'
+    });
+  } catch (error) {
+    console.error('Simple email test error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message
     });
   }
 });
