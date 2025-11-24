@@ -109,10 +109,14 @@ const forgotPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
-    const { resetToken } = req.params;
-    const { password } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
 
-    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    const { token, password } = req.body;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.findByIdAndUpdate(decoded.id, { password: hashedPassword }, { new: true });
@@ -129,7 +133,10 @@ const resetPassword = async (req, res) => {
 
     res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
-    console.log(error);
+    console.error('Reset password error:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+    }
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
