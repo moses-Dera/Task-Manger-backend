@@ -1,42 +1,40 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Initialize Resend with API Key
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Default sender
-const DEFAULT_SENDER = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+// Create transporter for Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 const sendEmail = async (to, subject, html) => {
-  console.log(`\n=== EMAIL SEND ATTEMPT (Resend) ===`);
+  console.log(`\n=== EMAIL SEND ATTEMPT (Gmail SMTP) ===`);
   console.log(`To: ${to}`);
   console.log(`Subject: ${subject}`);
-  console.log(`From: ${DEFAULT_SENDER}`);
+  console.log(`From: ${process.env.EMAIL_USER}`);
 
-  if (!process.env.RESEND_API_KEY) {
-    console.error('❌ RESEND_API_KEY is missing in .env');
-    return { success: false, error: 'Missing API Key' };
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('❌ EMAIL_USER or EMAIL_PASS is missing in .env');
+    throw new Error('Email credentials not configured');
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: DEFAULT_SENDER,
+    const info = await transporter.sendMail({
+      from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
       to: to,
       subject: subject,
       html: html,
     });
 
-    if (error) {
-      console.error('❌ Resend API Error:', error);
-      throw new Error(error.message || 'Failed to send email');
-    }
-
     console.log('✅ Email sent successfully!');
-    console.log('Message ID:', data.id);
-    return { success: true, messageId: data.id };
+    console.log('Message ID:', info.messageId);
+    return { success: true, messageId: info.messageId };
 
   } catch (err) {
-    console.error('❌ Unexpected Error sending email:', err.message);
+    console.error('❌ Error sending email:', err.message);
     throw err;
   }
 };
@@ -85,7 +83,6 @@ const sendMeetingNotification = async (user, meetingDetails) => {
   return sendEmail(user.email, subject, html);
 };
 
-// Keep these for compatibility if they are used elsewhere
 const sendPasswordResetConfirmation = async (user) => {
   const html = `<h1>Password Reset Successful</h1><p>Your password has been updated.</p>`;
   return sendEmail(user.email, "Password Reset Successful", html);
