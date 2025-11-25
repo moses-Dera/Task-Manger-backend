@@ -65,27 +65,51 @@ router.post('/', auth, async (req, res) => {
   try {
     let assigned_to = req.user._id;
     
+    console.log('=== TASK CREATION ===');
+    console.log('Request body:', req.body);
+    console.log('Creator:', { id: req.user._id, role: req.user.role, company: req.user.company });
+    
     if (req.body.assigned_to) {
       // Check if it's a valid ObjectId (from manager dashboard)
       if (mongoose.Types.ObjectId.isValid(req.body.assigned_to)) {
+        console.log('Using ObjectId for assignment:', req.body.assigned_to);
         assigned_to = req.body.assigned_to;
       } else {
-        // Fallback: search by username
-        const assignedUser = await User.findOne({ username: req.body.assigned_to, company: req.user.company });
+        // Fallback: search by username or name
+        console.log('Searching for user by username/name:', req.body.assigned_to);
+        const assignedUser = await User.findOne({ 
+          $or: [
+            { username: req.body.assigned_to },
+            { name: { $regex: new RegExp(req.body.assigned_to, 'i') } },
+            { email: req.body.assigned_to }
+          ],
+          company: req.user.company 
+        });
         if (assignedUser) {
+          console.log('Found user:', { id: assignedUser._id, name: assignedUser.name });
           assigned_to = assignedUser._id;
+        } else {
+          console.log('User not found, using creator ID');
         }
       }
     }
     
+    // Validate and sanitize input
+    const title = req.body.title ? req.body.title.trim().substring(0, 200) : 'Default Task';
+    const description = req.body.description ? req.body.description.trim().substring(0, 1000) : '';
+    const priority = ['low', 'medium', 'high'].includes(req.body.priority) ? req.body.priority : 'medium';
+    
     const task = await Task.create({
-      title: req.body.title || 'Default Task',
-      description: req.body.description || '',
-      priority: req.body.priority || 'medium',
+      title,
+      description,
+      priority,
       assigned_to,
       created_by: req.user._id,
-      company: req.user.company
+      company: req.user.company,
+      due_date: req.body.due_date || null
     });
+    
+    console.log('Task created:', { id: task._id, title: task.title, assigned_to: task.assigned_to });
     
     // Get updated task count for the assigned user
     const taskCount = await Task.countDocuments({ assigned_to, company: req.user.company });
@@ -97,7 +121,11 @@ router.post('/', auth, async (req, res) => {
       assignedUserId: assigned_to
     });
   } catch (error) {
-    res.json({ success: false, error: error.message });
+    console.error('Task creation error:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ success: false, error: 'Invalid task data provided' });
+    }
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

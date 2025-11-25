@@ -26,7 +26,7 @@ const updateProfile = async (req, res) => {
     if (department !== undefined) updateData.department = department;
 
     const user = await User.findByIdAndUpdate(req.user._id, updateData, { new: true }).select('-password');
-    res.json({ success: true, user: user });
+    res.json({ success: true, data: user });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(400).json({ success: false, error: 'Email already exists' });

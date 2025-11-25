@@ -109,8 +109,8 @@ const forgotPassword = async (req, res) => {
       res.status(500).json({ success: false, error: 'Failed to send reset link' });
     }
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 

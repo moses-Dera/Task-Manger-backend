@@ -8,11 +8,34 @@ const router = express.Router();
 // Get notifications
 router.get('/', auth, async (req, res) => {
   try {
-    const notifications = await Notification.find({ user_id: req.user._id })
+    let notifications = await Notification.find({ user_id: req.user._id })
       .sort({ createdAt: -1 });
+    
+    // If no notifications found, return mock data
+    if (notifications.length === 0) {
+      notifications = [
+        {
+          _id: '1',
+          title: 'Welcome to TaskFlow',
+          message: 'Your account has been set up successfully',
+          type: 'system',
+          read: false,
+          createdAt: new Date(Date.now() - 3600000)
+        },
+        {
+          _id: '2',
+          title: 'Getting Started',
+          message: 'Check out your dashboard to see assigned tasks',
+          type: 'info',
+          read: false,
+          createdAt: new Date(Date.now() - 7200000)
+        }
+      ];
+    }
     
     res.json({ success: true, data: notifications });
   } catch (error) {
+    console.error('Notifications error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });

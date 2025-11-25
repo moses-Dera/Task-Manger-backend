@@ -153,6 +153,12 @@ const inviteUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Invite user error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, error: 'User with this email already exists' });
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ success: false, error: 'Invalid user data provided' });
+    }
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
