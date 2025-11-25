@@ -8,31 +8,9 @@ const router = express.Router();
 // Get notifications
 router.get('/', auth, async (req, res) => {
   try {
-    let notifications = await Notification.find({ user_id: req.user._id })
+    const notifications = await Notification.find({ user_id: req.user._id })
       .sort({ createdAt: -1 });
-    
-    // If no notifications found, return mock data
-    if (notifications.length === 0) {
-      notifications = [
-        {
-          _id: '1',
-          title: 'Welcome to TaskFlow',
-          message: 'Your account has been set up successfully',
-          type: 'system',
-          read: false,
-          createdAt: new Date(Date.now() - 3600000)
-        },
-        {
-          _id: '2',
-          title: 'Getting Started',
-          message: 'Check out your dashboard to see assigned tasks',
-          type: 'info',
-          read: false,
-          createdAt: new Date(Date.now() - 7200000)
-        }
-      ];
-    }
-    
+
     res.json({ success: true, data: notifications });
   } catch (error) {
     console.error('Notifications error:', error);
@@ -43,6 +21,13 @@ router.get('/', auth, async (req, res) => {
 // Mark notification as read
 router.put('/:id/read', auth, async (req, res) => {
   try {
+    const mongoose = require('mongoose');
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid notification ID format' });
+    }
+
     const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, user_id: req.user._id },
       { read: true },
@@ -55,6 +40,22 @@ router.put('/:id/read', auth, async (req, res) => {
 
     res.json({ success: true, data: notification });
   } catch (error) {
+    console.error('Mark as read error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Mark all notifications as read
+router.put('/mark-all-read', auth, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user_id: req.user._id, read: false },
+      { read: true }
+    );
+
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    console.error('Mark all as read error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });

@@ -14,6 +14,13 @@ const getNotifications = async (req, res) => {
 
 const markAsRead = async (req, res) => {
   try {
+    const mongoose = require('mongoose');
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid notification ID format' });
+    }
+
     const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, user_id: req.user._id },
       { read: true },
@@ -26,6 +33,7 @@ const markAsRead = async (req, res) => {
 
     res.json({ success: true, data: notification });
   } catch (error) {
+    console.error('Mark as read error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
