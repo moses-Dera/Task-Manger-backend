@@ -15,6 +15,7 @@ const {
   pinMessage,
   getPinnedMessages,
   getTeamMembers,
+  uploadAttachment,
   upload
 } = require('../controllers/chatController');
 
@@ -66,5 +67,8 @@ router.put('/messages/:id/pin', auth, [
 
 // Get pinned messages
 router.get('/messages/pinned', auth, getPinnedMessages);
+
+// Upload attachment
+router.post('/upload-attachment', auth, upload.array('files', 5), uploadAttachment);
 
 module.exports = router;
