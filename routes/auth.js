@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { auth } = require('../middleware/auth');
+const { loginLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
 const { signup, login, getCurrentUser, forgotPassword, resetPassword } = require('../controllers/authController');
 const { sendWelcomeEmail } = require('../utils/emailService');
 
@@ -12,14 +13,14 @@ router.post('/signup', [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], signup);
 
-router.post('/login', [
+router.post('/login', loginLimiter, [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required')
 ], login);
 
 router.get('/me', auth, getCurrentUser);
 
-router.post('/forgot-password', [
+router.post('/forgot-password', passwordResetLimiter, [
   body('email').isEmail().withMessage('Valid email is required')
 ], forgotPassword);
 
@@ -34,24 +35,24 @@ router.post('/test-email', [
 ], async (req, res) => {
   try {
     const { email } = req.body;
-    const testUser = { 
-      name: 'Test User', 
+    const testUser = {
+      name: 'Test User',
       email: email,
       role: 'employee'
     };
-    
+
     console.log('Testing email send to:', email);
     await sendWelcomeEmail(testUser);
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: 'Test email sent successfully',
       details: `Email was sent to ${email}. Check your inbox and spam folder.`
     });
   } catch (error) {
     console.error('Test email error:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to send test email',
       details: error.message
     });
@@ -63,15 +64,15 @@ router.post('/test-welcome', async (req, res) => {
   try {
     const { sendSimpleEmail } = require('../utils/emailService');
     await sendSimpleEmail('mosesjohnson706@gmail.com');
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: 'Simple test email sent'
     });
   } catch (error) {
     console.error('Simple email test error:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: error.message
     });
   }

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetConfirmation } = require('../utils/emailService');
+const { createActivityLog } = require('../middleware/activityLogger');
 
 const signup = async (req, res) => {
   try {
@@ -12,11 +13,11 @@ const signup = async (req, res) => {
     }
 
     const { name, email, password, role, company } = req.body;
-    
+
     if (!company) {
       return res.status(400).json({ success: false, error: 'Company is required' });
     }
-    
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'User already exists' });
@@ -24,7 +25,7 @@ const signup = async (req, res) => {
 
     const user = new User({ name, email, password, role: role || 'employee', company });
     await user.save();
-    
+
     console.log('=== SIGNUP WELCOME EMAIL ===');
     console.log('User created:', { id: user._id, name: user.name, email: user.email });
     console.log('Attempting to send welcome email...');
@@ -37,8 +38,11 @@ const signup = async (req, res) => {
       console.error('Error details:', error.message);
     });
 
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
-                           process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company },
+      process.env.JWT_SECRET, { expiresIn: '24h' });
+
+    // Log signup activity
+    createActivityLog(user, 'signed up', `New ${role || 'employee'} account created`);
 
     res.status(201).json({
       success: true,
@@ -59,14 +63,17 @@ const login = async (req, res) => {
     }
 
     const { email, password } = req.body;
-    
+
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(400).json({ success: false, error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company }, 
-                           process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company },
+      process.env.JWT_SECRET, { expiresIn: '24h' });
+
+    // Log login activity
+    createActivityLog(user, 'logged in', 'User authentication successful');
 
     res.json({
       success: true,
@@ -94,7 +101,7 @@ const forgotPassword = async (req, res) => {
 
     const { email } = req.body;
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       return res.status(400).json({ success: false, error: 'User does not exist' });
     }

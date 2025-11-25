@@ -64,6 +64,17 @@ const sendMessage = async (req, res) => {
       await message.populate('recipient_id', 'name email role');
     }
 
+    // Emit real-time message event via Socket.io
+    const io = req.app.get('io');
+    if (io) {
+      io.emitNotification(recipient_id || socket.userCompany, {
+        type: 'new_message',
+        message: message,
+        senderId: req.user._id,
+        senderName: req.user.name
+      });
+    }
+
     res.status(201).json({ success: true, data: message });
   } catch (error) {
     console.error('Chat send message error:', error);

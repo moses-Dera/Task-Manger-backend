@@ -5,7 +5,7 @@ const getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({ user_id: req.user._id })
       .sort({ createdAt: -1 });
-    
+
     res.json({ success: true, data: notifications });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
@@ -40,8 +40,21 @@ const createNotification = async (req, res) => {
     const notification = new Notification(req.body);
     await notification.save();
 
+    // Emit real-time notification via Socket.io
+    const io = req.app.get('io');
+    if (io && io.emitNotification) {
+      io.emitNotification(req.body.user_id, {
+        id: notification._id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        timestamp: notification.createdAt
+      });
+    }
+
     res.status(201).json({ success: true, data: notification });
   } catch (error) {
+    console.error('Create notification error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

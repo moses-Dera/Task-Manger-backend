@@ -3,6 +3,7 @@ const Task = require('../models/Task');
 const TaskFile = require('../models/TaskFile');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const { createActivityLog } = require('../middleware/activityLogger');
 
 const getTasks = async (req, res) => {
   try {
@@ -67,11 +68,26 @@ const createTask = async (req, res) => {
         });
         await notification.save();
         console.log('Notification created for user:', assignedUser.name);
+
+        // Emit real-time notification via Socket.io
+        const io = req.app.get('io');
+        if (io && io.emitNotification) {
+          io.emitNotification(assignedUser._id, {
+            id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            timestamp: notification.createdAt
+          });
+        }
       }
     } catch (notifError) {
       console.error('Failed to create notification:', notifError);
       // Don't fail the task creation if notification fails
     }
+
+    // Log task creation activity
+    createActivityLog(req.user, 'created task', `Task "${task.title}" assigned to ${populatedTask.assigned_to.name}`);
 
     res.status(201).json({ success: true, data: populatedTask });
   } catch (error) {

@@ -1,60 +1,95 @@
 const express = require('express');
 const { auth, authorize } = require('../middleware/auth');
+const Task = require('../models/Task');
+const User = require('../models/User');
+const ActivityLog = require('../models/ActivityLog');
 
 const router = express.Router();
 
 // Get system metrics (Admin only)
 router.get('/metrics', auth, authorize('admin'), async (req, res) => {
   try {
-    // Mock system metrics - in a real app, you'd get actual system stats
-    const metrics = {
-      cpu_usage: Math.floor(Math.random() * 30) + 20, // 20-50%
-      memory_usage: Math.floor(Math.random() * 40) + 40, // 40-80%
-      disk_usage: Math.floor(Math.random() * 20) + 60, // 60-80%
-      db_storage: Math.floor(Math.random() * 30) + 45, // 45-75 GB
-      active_users: Math.floor(Math.random() * 50) + 100,
-      requests_per_minute: Math.floor(Math.random() * 200) + 300,
-      uptime: '15 days, 4 hours, 23 minutes',
-      last_backup: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-      server_status: 'healthy'
+    const company = req.user.company;
+
+    // Get real task statistics
+    const [totalTasks, completedTasks, pendingTasks, overdueTasks] = await Promise.all([
+      Task.countDocuments({ company }),
+      Task.countDocuments({ company, status: 'completed' }),
+      Task.countDocuments({ company, status: 'pending' }),
+      Task.countDocuments({ company, status: 'overdue' })
+    ]);
+
+    // Get user statistics
+    const [totalUsers, activeUsers] = await Promise.all([
+      User.countDocuments({ company }),
+      User.countDocuments({ company, createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } })
+    ]);
+
+    // Calculate completion rate
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Get task distribution
+    const taskDistribution = {
+      completed: completedTasks,
+      pending: pendingTasks,
+      overdue: overdueTasks,
+      'in-progress': totalTasks - completedTasks - pendingTasks - overdueTasks
     };
 
-    res.json({ success: true, data: metrics });
+    res.json({
+      success: true,
+      data: {
+        total_tasks: totalTasks,
+        completed_tasks: completedTasks,
+        pending_tasks: pendingTasks,
+        overdue_tasks: overdueTasks,
+        completion_rate: completionRate,
+        total_users: totalUsers,
+        active_users: activeUsers,
+        task_distribution: taskDistribution,
+        // Note: Resource metrics (CPU, memory, DB) would require system monitoring tools
+        // For now, we'll omit these or use placeholder values
+        db_storage: 0, // Requires MongoDB stats
+        cpu_load: 0,   // Requires system monitoring
+        memory_usage: 0 // Requires system monitoring
+      }
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Get metrics error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch metrics' });
   }
 });
 
 // Get activity logs (Admin only)
 router.get('/activity-logs', auth, authorize('admin'), async (req, res) => {
   try {
-    // Mock activity logs
-    const activityLogs = [
-      {
-        time: new Date().toLocaleTimeString(),
-        action: 'User john.doe@company.com logged in'
-      },
-      {
-        time: new Date(Date.now() - 300000).toLocaleTimeString(),
-        action: 'Task "Complete project documentation" was created'
-      },
-      {
-        time: new Date(Date.now() - 600000).toLocaleTimeString(),
-        action: 'User jane.smith@company.com updated profile'
-      },
-      {
-        time: new Date(Date.now() - 900000).toLocaleTimeString(),
-        action: 'System backup completed successfully'
-      },
-      {
-        time: new Date(Date.now() - 1200000).toLocaleTimeString(),
-        action: 'New employee invited: newuser@company.com'
-      }
-    ];
+    const company = req.user.company;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = parseInt(req.query.skip) || 0;
 
-    res.json({ success: true, data: activityLogs });
+    const logs = await ActivityLog.find({ company })
+      .populate('user_id', 'name email role')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .lean();
+
+    // Format logs for frontend
+    const formattedLogs = logs.map(log => ({
+      time: new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      action: `${log.user_id?.name || 'Unknown'} ${log.action}`,
+      details: log.details,
+      timestamp: log.createdAt
+    }));
+
+    res.json({
+      success: true,
+      data: formattedLogs,
+      total: await ActivityLog.countDocuments({ company })
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('Get activity logs error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch activity logs' });
   }
 });
 
