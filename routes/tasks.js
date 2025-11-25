@@ -66,9 +66,15 @@ router.post('/', auth, async (req, res) => {
     let assigned_to = req.user._id;
     
     if (req.body.assigned_to) {
-      const assignedUser = await User.findOne({ username: req.body.assigned_to, company: req.user.company });
-      if (assignedUser) {
-        assigned_to = assignedUser._id;
+      // Check if it's a valid ObjectId (from manager dashboard)
+      if (mongoose.Types.ObjectId.isValid(req.body.assigned_to)) {
+        assigned_to = req.body.assigned_to;
+      } else {
+        // Fallback: search by username
+        const assignedUser = await User.findOne({ username: req.body.assigned_to, company: req.user.company });
+        if (assignedUser) {
+          assigned_to = assignedUser._id;
+        }
       }
     }
     
