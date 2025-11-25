@@ -55,6 +55,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
