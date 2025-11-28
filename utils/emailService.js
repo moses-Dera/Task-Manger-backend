@@ -7,8 +7,14 @@ const mailerSend = new MailerSend({
 });
 
 // Default sender email
-const DEFAULT_SENDER_EMAIL = process.env.EMAIL_FROM || 'noreply@TaskFlow.com.ng';
+// Default sender email
+const DEFAULT_SENDER_EMAIL = process.env.EMAIL_FROM;
 const DEFAULT_SENDER_NAME = 'TaskFlow';
+
+if (!DEFAULT_SENDER_EMAIL) {
+  console.error('❌ EMAIL_FROM is missing in .env');
+  // We don't throw here to allow the app to start, but sendEmail will fail
+}
 
 const sendEmail = async (to, subject, html) => {
   console.log(`\n=== EMAIL SEND ATTEMPT (MailerSend) ===`);
@@ -17,9 +23,9 @@ const sendEmail = async (to, subject, html) => {
   console.log(`From: ${DEFAULT_SENDER_EMAIL}`);
   console.log(`API Token: ${process.env.MAILERSEND_API_TOKEN ? 'Set ✓' : 'Missing ✗'}`);
 
-  if (!process.env.MAILERSEND_API_TOKEN) {
-    console.error('❌ MAILERSEND_API_TOKEN is missing in .env');
-    throw new Error('Email service not configured');
+  if (!process.env.MAILERSEND_API_TOKEN || !DEFAULT_SENDER_EMAIL) {
+    console.error('❌ Missing email configuration (MAILERSEND_API_TOKEN or EMAIL_FROM)');
+    throw new Error('Email service not configured correctly');
   }
 
   try {

@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const Message = require('../models/Message');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const multer = require('multer');
 const path = require('path');
 
@@ -123,6 +124,32 @@ const sendMessage = async (req, res) => {
         senderId: req.user._id,
         senderName: req.user.name
       });
+
+      // Create notification for direct messages
+      if (recipient_id) {
+        try {
+          const notification = new Notification({
+            user_id: recipient_id,
+            title: `New Message from ${req.user.name}`,
+            message: message.message.length > 50 ? message.message.substring(0, 50) + '...' : message.message,
+            type: 'message',
+            read: false
+          });
+          await notification.save();
+
+          if (io.emitNotification) {
+            io.emitNotification(recipient_id, {
+              id: notification._id,
+              title: notification.title,
+              message: notification.message,
+              type: notification.type,
+              timestamp: notification.createdAt
+            });
+          }
+        } catch (notifError) {
+          console.error('Failed to create chat notification:', notifError);
+        }
+      }
     }
 
     res.status(201).json({ success: true, data: message });

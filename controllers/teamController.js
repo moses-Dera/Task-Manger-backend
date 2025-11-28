@@ -2,6 +2,8 @@ const { validationResult } = require('express-validator');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Task = require('../models/Task');
+const Task = require('../models/Task');
+const Notification = require('../models/Notification');
 const { sendWelcomeEmail, sendMeetingNotification } = require('../utils/emailService');
 
 const getEmployees = async (req, res) => {
@@ -13,13 +15,13 @@ const getEmployees = async (req, res) => {
     const employeesWithStats = await Promise.all(employees.map(async (employee) => {
       const tasksAssigned = await Task.countDocuments({ assigned_to: employee._id, company: req.user.company });
       const tasksCompleted = await Task.countDocuments({ assigned_to: employee._id, status: 'completed', company: req.user.company });
-      
+
       let performanceScore = 'N/A';
       if (tasksAssigned > 0) {
         const completionRate = (tasksCompleted / tasksAssigned) * 100;
         performanceScore = completionRate >= 90 ? 'A+' : completionRate >= 80 ? 'A' : completionRate >= 70 ? 'B' : 'C';
       }
-      
+
       return {
         id: employee._id,
         name: employee.name,
@@ -40,21 +42,21 @@ const getEmployees = async (req, res) => {
 const getPerformance = async (req, res) => {
   try {
     const now = new Date();
-    
+
     // Get all tasks for the company
     const allTasks = await Task.find({ company: req.user.company }).lean();
     console.log(`Found ${allTasks.length} tasks for company: ${req.user.company}`);
-    
+
     // Calculate stats
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter(task => task.status === 'completed').length;
     const pendingTasks = allTasks.filter(task => task.status === 'pending').length;
     const inProgressTasks = allTasks.filter(task => task.status === 'in-progress').length;
-    
+
     // Calculate overdue tasks (past due date and not completed)
-    const overdueTasks = allTasks.filter(task => 
-      task.due_date && 
-      new Date(task.due_date) < now && 
+    const overdueTasks = allTasks.filter(task =>
+      task.due_date &&
+      new Date(task.due_date) < now &&
       task.status !== 'completed'
     ).length;
 
@@ -80,7 +82,7 @@ const getPerformance = async (req, res) => {
 const assignTask = async (req, res) => {
   try {
     const { title, description, priority, due_date, assigned_to } = req.body;
-    
+
     if (!title || !assigned_to) {
       return res.status(400).json({ success: false, error: 'Title and assigned user required' });
     }
@@ -94,7 +96,7 @@ const assignTask = async (req, res) => {
       created_by: req.user._id,
       company: req.user.company
     });
-    
+
     console.log(`Task created: ${task.title} for company: ${req.user.company}`);
     res.status(201).json({ success: true, data: task });
   } catch (error) {
@@ -106,7 +108,7 @@ const assignTask = async (req, res) => {
 const inviteUser = async (req, res) => {
   try {
     const { email, role = 'employee' } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({ success: false, error: 'Email is required' });
     }
@@ -130,9 +132,9 @@ const inviteUser = async (req, res) => {
       role,
       company: req.user.company
     });
-    
+
     console.log('User created with email:', user.email);
-    
+
     // Send welcome email with temporary password
     console.log('Sending welcome email to invited user:', user.email);
     sendWelcomeEmail(user, tempPassword).then(() => {
@@ -140,9 +142,9 @@ const inviteUser = async (req, res) => {
     }).catch(error => {
       console.error('Welcome email failed for invited user:', user.email, error.message);
     });
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: 'User invited successfully',
       user: {
         id: user._id,
@@ -224,32 +226,45 @@ const deleteUser = async (req, res) => {
 const notifyTeamMeeting = async (req, res) => {
   try {
     const { title, description, meeting_url } = req.body;
-    
+
     if (!title || !meeting_url) {
       return res.status(400).json({ success: false, error: 'Title and meeting URL required' });
     }
 
     // Get all employees in company
-    const employees = await User.find({ 
-      company: req.user.company, 
-      role: 'employee' 
+    const employees = await User.find({
+      company: req.user.company,
+      role: 'employee'
     }).select('email name _id').lean();
-    
+
     console.log('Found employees for meeting notification:', employees.map(e => ({ name: e.name, email: e.email })));
-    
+
     // Create notification for each employee
     const notifications = employees.map(employee => ({
       user_id: employee._id,
       title: title,
       message: description || `Meeting started by ${req.user.name}`,
-      type: 'meeting',
-      data: { meeting_url },
-      created_at: new Date()
+      type: 'reminder', // Using 'reminder' as 'meeting' is not in enum
+      read: false
     }));
 
-    // In a real app, you'd save notifications to DB and send emails
-    // await Notification.insertMany(notifications);
-    
+    // Save notifications to DB
+    const savedNotifications = await Notification.insertMany(notifications);
+
+    // Emit real-time notifications via Socket.io
+    const io = req.app.get('io');
+    if (io && io.emitNotification) {
+      savedNotifications.forEach(notification => {
+        io.emitNotification(notification.user_id, {
+          id: notification._id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          timestamp: notification.createdAt
+        });
+      });
+    }
+
     // Send emails to all employees
     if (employees.length > 0) {
       const emailPromises = employees.map(employee => {
@@ -260,7 +275,7 @@ const notifyTeamMeeting = async (req, res) => {
             return { failed: true, email: employee.email, error: error.message };
           });
       });
-      
+
       // Send emails asynchronously
       Promise.all(emailPromises).then(results => {
         const failed = results.filter(r => r && r.failed);
@@ -271,9 +286,9 @@ const notifyTeamMeeting = async (req, res) => {
     } else {
       console.log('No employees found to notify');
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: `Meeting notification sent to ${employees.length} team members`,
       notified_count: employees.length
     });
@@ -288,10 +303,10 @@ const testEmail = async (req, res) => {
     if (!email) {
       return res.status(400).json({ success: false, error: 'Email is required' });
     }
-    
+
     const { testEmail: sendTestEmail } = require('../utils/emailService');
     await sendTestEmail(email);
-    
+
     res.json({ success: true, message: 'Test email sent successfully' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

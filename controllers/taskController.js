@@ -135,6 +135,37 @@ const updateTask = async (req, res) => {
       .populate('assigned_to', 'name')
       .populate('created_by', 'name');
 
+    // Create notification for assigned employee if status changed or reassigned
+    try {
+      // Notify if the user updating is NOT the assigned user (e.g. manager updates task)
+      // OR if the user updating IS the assigned user but it's a status change (optional, maybe not needed for self-updates)
+      // Let's notify the assigned user if they are not the one making the change
+      if (updatedTask.assigned_to._id.toString() !== req.user._id.toString()) {
+        const notification = new Notification({
+          user_id: updatedTask.assigned_to._id,
+          title: 'Task Updated',
+          message: `Task "${updatedTask.title}" has been updated by ${req.user.name}`,
+          type: 'task',
+          read: false
+        });
+        await notification.save();
+
+        // Emit real-time notification via Socket.io
+        const io = req.app.get('io');
+        if (io && io.emitNotification) {
+          io.emitNotification(updatedTask.assigned_to._id, {
+            id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            timestamp: notification.createdAt
+          });
+        }
+      }
+    } catch (notifError) {
+      console.error('Failed to create notification:', notifError);
+    }
+
     res.json({ success: true, data: updatedTask });
   } catch (error) {
     console.error('Update task error:', error);
