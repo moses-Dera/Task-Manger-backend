@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Task = require('../models/Task');
-const Task = require('../models/Task');
+
 const Notification = require('../models/Notification');
 const { sendWelcomeEmail, sendMeetingNotification } = require('../utils/emailService');
 
