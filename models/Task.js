@@ -8,7 +8,9 @@ const taskSchema = new mongoose.Schema({
   due_date: { type: Date },
   assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  company: { type: String, required: true }
+  company: { type: String, required: true },
+  submission_url: { type: String },
+  submission_date: { type: Date }
 }, { timestamps: true });
 
 // Add indexes for frequently queried fields

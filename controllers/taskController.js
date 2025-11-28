@@ -162,6 +162,30 @@ const updateTask = async (req, res) => {
           });
         }
       }
+
+      // Notify the manager (created_by) if the assigned user updates the task (e.g. submission)
+      if (updatedTask.assigned_to._id.toString() === req.user._id.toString() && updatedTask.created_by) {
+        const notification = new Notification({
+          user_id: updatedTask.created_by._id,
+          title: 'Task Updated',
+          message: `Task "${updatedTask.title}" has been updated by ${req.user.name}`,
+          type: 'task',
+          read: false
+        });
+        await notification.save();
+
+        // Emit real-time notification via Socket.io
+        const io = req.app.get('io');
+        if (io && io.emitNotification) {
+          io.emitNotification(updatedTask.created_by._id, {
+            id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            timestamp: notification.createdAt
+          });
+        }
+      }
     } catch (notifError) {
       console.error('Failed to create notification:', notifError);
     }

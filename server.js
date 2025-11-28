@@ -20,6 +20,10 @@ const analyticsRoutes = require('./routes/analytics');
 const templateRoutes = require('./routes/templates');
 
 const app = express();
+
+// Trust proxy is required for rate limiting behind a proxy (like Render/Heroku)
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 
 // Initialize Socket.io with CORS
