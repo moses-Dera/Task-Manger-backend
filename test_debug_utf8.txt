@@ -1,0 +1,305 @@
+﻿
+> task-manager-backend@1.0.0 test
+> jest --coverage tests/integration/tasks.test.js
+
+  console.log
+    === TASK FETCH ===
+
+      at log (routes/tasks.js:38:13)
+
+  console.log
+    User: {
+      id: new ObjectId("692b687cc5c4bca73b0a17d6"),
+      role: 'manager',
+      company: 'testcompany'
+    }
+
+      at log (routes/tasks.js:39:13)
+
+  console.error
+    Task fetch error: TypeError: Task.find(...).populate(...).populate(...).sort(...).lean is not a function
+        at lean (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\routes\tasks.js:51:8)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\route.js:149:13)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\tests\integration\tasks.test.js:19:31)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\route.js:149:13)
+        at Route.dispatch (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\route.js:119:3)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:284:15
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at Function.handle (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:175:3)
+        at router (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:47:12)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\tests\integration\tasks.test.js:48:17)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at jsonParser (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\body-parser\lib\types\json.js:113:7)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at expressInit (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\middleware\init.js:40:5)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at query (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\middleware\query.js:45:5)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at Function.handle (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:175:3)
+        at Function.handle (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\application.js:181:10)
+        at Server.app (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\express.js:39:9)
+        at Server.emit (node:events:518:28)
+        at parserOnIncoming (node:_http_server:1153:12)
+        at HTTPParser.parserOnHeadersComplete (node:_http_common:117:17)
+
+    [0m [90m 56 |[39m     res[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m tasks })[33m;[39m
+     [90m 57 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 58 |[39m     console[33m.[39merror([32m'Task fetch error:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 59 |[39m     res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Server error'[39m })[33m;[39m
+     [90m 60 |[39m   }
+     [90m 61 |[39m })[33m;[39m[0m
+
+      at error (routes/tasks.js:58:13)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at next (node_modules/express/lib/router/route.js:149:13)
+      at next (tests/integration/tasks.test.js:19:31)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at next (node_modules/express/lib/router/route.js:149:13)
+      at Route.dispatch (node_modules/express/lib/router/route.js:119:3)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at node_modules/express/lib/router/index.js:284:15
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at router (node_modules/express/lib/router/index.js:47:12)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at next (tests/integration/tasks.test.js:48:17)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at jsonParser (node_modules/body-parser/lib/types/json.js:113:7)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at expressInit (node_modules/express/lib/middleware/init.js:40:5)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at query (node_modules/express/lib/middleware/query.js:45:5)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at Function.handle (node_modules/express/lib/application.js:181:10)
+      at Server.app (node_modules/express/lib/express.js:39:9)
+
+  console.log
+    === TASK FETCH ===
+
+      at log (routes/tasks.js:38:13)
+
+  console.log
+    User: {
+      id: new ObjectId("692b687dc5c4bca73b0a17d9"),
+      role: 'manager',
+      company: 'testcompany'
+    }
+
+      at log (routes/tasks.js:39:13)
+
+  console.error
+    Task fetch error: TypeError: Task.find(...).populate(...).populate(...).sort(...).lean is not a function
+        at lean (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\routes\tasks.js:51:8)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\route.js:149:13)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\tests\integration\tasks.test.js:19:31)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\route.js:149:13)
+        at Route.dispatch (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\route.js:119:3)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:284:15
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at Function.handle (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:175:3)
+        at router (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:47:12)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\tests\integration\tasks.test.js:48:17)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at jsonParser (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\body-parser\lib\types\json.js:113:7)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at expressInit (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\middleware\init.js:40:5)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at query (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\middleware\query.js:45:5)
+        at Layer.handle [as handle_request] (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\layer.js:95:5)
+        at trim_prefix (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:328:13)
+        at C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:286:9
+        at Function.process_params (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:346:12)
+        at next (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:280:10)
+        at Function.handle (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\router\index.js:175:3)
+        at Function.handle (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\application.js:181:10)
+        at Server.app (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\node_modules\express\lib\express.js:39:9)
+        at Server.emit (node:events:518:28)
+        at parserOnIncoming (node:_http_server:1153:12)
+        at HTTPParser.parserOnHeadersComplete (node:_http_common:117:17)
+
+    [0m [90m 56 |[39m     res[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m tasks })[33m;[39m
+     [90m 57 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 58 |[39m     console[33m.[39merror([32m'Task fetch error:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 59 |[39m     res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Server error'[39m })[33m;[39m
+     [90m 60 |[39m   }
+     [90m 61 |[39m })[33m;[39m[0m
+
+      at error (routes/tasks.js:58:13)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at next (node_modules/express/lib/router/route.js:149:13)
+      at next (tests/integration/tasks.test.js:19:31)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at next (node_modules/express/lib/router/route.js:149:13)
+      at Route.dispatch (node_modules/express/lib/router/route.js:119:3)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at node_modules/express/lib/router/index.js:284:15
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at router (node_modules/express/lib/router/index.js:47:12)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at next (tests/integration/tasks.test.js:48:17)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at jsonParser (node_modules/body-parser/lib/types/json.js:113:7)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at expressInit (node_modules/express/lib/middleware/init.js:40:5)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at query (node_modules/express/lib/middleware/query.js:45:5)
+      at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:328:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Function.handle (node_modules/express/lib/router/index.js:175:3)
+      at Function.handle (node_modules/express/lib/application.js:181:10)
+      at Server.app (node_modules/express/lib/express.js:39:9)
+
+  console.log
+    === TASK CREATION ===
+
+      at log (routes/tasks.js:68:13)
+
+  console.log
+    Request body: { description: 'Task without title' }
+
+      at log (routes/tasks.js:69:13)
+
+  console.log
+    Creator: {
+      id: new ObjectId("692b687dc5c4bca73b0a17dd"),
+      role: 'manager',
+      company: 'testcompany'
+    }
+
+      at log (routes/tasks.js:70:13)
+
+  console.error
+    Task creation error: TypeError: Cannot read properties of undefined (reading '_id')
+        at _id (C:\Users\HomePC\Desktop\Task-Manger\Task-Manger-backend\routes\tasks.js:112:45)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+    [0m [90m 122 |[39m     })[33m;[39m
+     [90m 123 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 124 |[39m     console[33m.[39merror([32m'Task creation error:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 125 |[39m     [36mif[39m (error[33m.[39mname [33m===[39m [32m'ValidationError'[39m) {
+     [90m 126 |[39m       [36mreturn[39m res[33m.[39mstatus([35m400[39m)[33m.[39mjson({ success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Invalid task data provided'[39m })[33m;[39m
+     [90m 127 |[39m     }[0m
+
+      at error (routes/tasks.js:124:13)
+
+----------------------------|---------|----------|---------|---------|-------------------
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------------|---------|----------|---------|---------|-------------------
+All files                   |     2.4 |        0 |       0 |    2.48 |                   
+ controllers                |       0 |        0 |       0 |       0 |                   
+  analyticsController.js    |       0 |        0 |       0 |       0 | 1-243             
+  authController.js         |       0 |        0 |       0 |       0 | 1-158             
+  chatController.js         |       0 |        0 |       0 |       0 | 1-586             
+  notificationController.js |       0 |        0 |       0 |       0 | 1-70              
+  taskController.js         |       0 |        0 |       0 |       0 | 1-231             
+  teamController.js         |       0 |        0 |       0 |       0 | 1-318             
+  templateController.js     |       0 |        0 |       0 |       0 | 1-133             
+  userController.js         |       0 |        0 |       0 |       0 | 1-90              
+ middleware                 |       0 |        0 |       0 |       0 |                   
+  activityLogger.js         |       0 |        0 |       0 |       0 | 1-59              
+  auth.js                   |       0 |        0 |       0 |       0 | 1-34              
+  cache.js                  |       0 |        0 |       0 |       0 | 1-101             
+  rateLimiter.js            |       0 |      100 |     100 |       0 | 1-40              
+ models                     |   26.88 |        0 |       0 |    28.4 |                   
+  ActivityLog.js            |       0 |      100 |     100 |       0 | 1-18              
+  Message.js                |       0 |        0 |       0 |       0 | 1-118             
+  Notification.js           |     100 |      100 |     100 |     100 |                   
+  Task.js                   |     100 |      100 |     100 |     100 |                   
+  TaskFile.js               |       0 |      100 |     100 |       0 | 1-11              
+  TaskTemplate.js           |       0 |      100 |     100 |       0 | 1-18              
+  User.js                   |   56.25 |        0 |       0 |      60 | 24-30,34          
+ utils                      |       0 |        0 |       0 |       0 |                   
+  emailService.js           |       0 |        0 |       0 |       0 | 1-377             
+----------------------------|---------|----------|---------|---------|-------------------
