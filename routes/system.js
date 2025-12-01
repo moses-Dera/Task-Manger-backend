@@ -6,6 +6,11 @@ const ActivityLog = require('../models/ActivityLog');
 
 const router = express.Router();
 
+// Public health check endpoint
+router.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Get system metrics (Admin only)
 router.get('/metrics', auth, authorize('admin'), async (req, res) => {
   try {
