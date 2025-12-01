@@ -64,6 +64,8 @@ const createTask = async (req, res) => {
           title: 'New Task Assigned',
           message: `You have been assigned a new task: "${task.title}"`,
           type: 'task',
+          related_id: task._id,
+          onModel: 'Task',
           read: false
         });
         await notification.save();
@@ -146,6 +148,8 @@ const updateTask = async (req, res) => {
           title: 'Task Updated',
           message: `Task "${updatedTask.title}" has been updated by ${req.user.name}`,
           type: 'task',
+          related_id: updatedTask._id,
+          onModel: 'Task',
           read: false
         });
         await notification.save();
@@ -170,6 +174,8 @@ const updateTask = async (req, res) => {
           title: 'Task Updated',
           message: `Task "${updatedTask.title}" has been updated by ${req.user.name}`,
           type: 'task',
+          related_id: updatedTask._id,
+          onModel: 'Task',
           read: false
         });
         await notification.save();

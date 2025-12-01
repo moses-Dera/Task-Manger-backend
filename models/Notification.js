@@ -5,6 +5,8 @@ const notificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
   message: { type: String, required: true },
   type: { type: String, enum: ['task', 'message', 'reminder', 'system'], required: true },
+  related_id: { type: mongoose.Schema.Types.ObjectId, refPath: 'onModel' },
+  onModel: { type: String, enum: ['Task', 'Message'] },
   read: { type: Boolean, default: false }
 }, { timestamps: true });
 
