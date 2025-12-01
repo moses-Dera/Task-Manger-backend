@@ -79,6 +79,7 @@ const createTask = async (req, res) => {
             title: notification.title,
             message: notification.message,
             type: notification.type,
+            related_id: task._id,
             timestamp: notification.createdAt
           });
         }
@@ -162,6 +163,7 @@ const updateTask = async (req, res) => {
             title: notification.title,
             message: notification.message,
             type: notification.type,
+            related_id: updatedTask._id,
             timestamp: notification.createdAt
           });
         }
@@ -188,6 +190,7 @@ const updateTask = async (req, res) => {
             title: notification.title,
             message: notification.message,
             type: notification.type,
+            related_id: updatedTask._id,
             timestamp: notification.createdAt
           });
         }
