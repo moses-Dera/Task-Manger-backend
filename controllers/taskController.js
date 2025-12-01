@@ -7,11 +7,13 @@ const { createActivityLog } = require('../middleware/activityLogger');
 
 const getTasks = async (req, res) => {
   try {
-    const { status, tab } = req.query;
+    const { status, tab, assigned_to } = req.query;
     let query = { company: req.user.company };
 
     if (req.user.role === 'employee') {
       query.assigned_to = req.user._id;
+    } else if (assigned_to) {
+      query.assigned_to = assigned_to;
     }
 
     if (status) query.status = status;
