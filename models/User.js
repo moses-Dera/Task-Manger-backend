@@ -6,8 +6,15 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   username: { type: String, unique: true, sparse: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'manager', 'employee'], default: 'employee' },
-  company: { type: String, required: true },
+
+  companies: [{
+    company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    role: { type: String, enum: ['admin', 'manager', 'employee'], required: true },
+    department: { type: String },
+    joinedAt: { type: Date, default: Date.now },
+    isActive: { type: Boolean, default: true }
+  }],
+  currentCompany: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
   phone: { type: String },
   department: { type: String },
   profilePicture: { type: String },
@@ -17,8 +24,8 @@ const userSchema = new mongoose.Schema({
 
 // Add indexes for frequently queried fields
 userSchema.index({ email: 1 });
-userSchema.index({ company: 1 });
-userSchema.index({ role: 1 });
+userSchema.index({ 'companies.company': 1 });
+userSchema.index({ currentCompany: 1 });
 
 userSchema.pre('save', async function (next) {
   // Generate username from email if not provided
