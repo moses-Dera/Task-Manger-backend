@@ -1,56 +1,46 @@
-const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Initialize MailerSend
-const mailerSend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_TOKEN,
+// Initialize Gmail SMTP transporter
+const transporter = nodemailer.createTransporter({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
 });
 
-// Default sender email
-// Default sender email
-const DEFAULT_SENDER_EMAIL = process.env.EMAIL_FROM;
-const DEFAULT_SENDER_NAME = 'TaskFlow';
-
-if (!DEFAULT_SENDER_EMAIL) {
-  console.error('❌ EMAIL_FROM is missing in .env');
-  // We don't throw here to allow the app to start, but sendEmail will fail
-}
-
 const sendEmail = async (to, subject, html) => {
-  console.log(`\n=== EMAIL SEND ATTEMPT (MailerSend) ===`);
+  console.log(`\n=== EMAIL SEND ATTEMPT (Gmail SMTP) ===`);
   console.log(`To: ${to}`);
   console.log(`Subject: ${subject}`);
-  console.log(`From: ${DEFAULT_SENDER_EMAIL}`);
-  console.log(`API Token: ${process.env.MAILERSEND_API_TOKEN ? 'Set ✓' : 'Missing ✗'}`);
+  console.log(`From: ${process.env.EMAIL_USER}`);
 
-  if (!process.env.MAILERSEND_API_TOKEN || !DEFAULT_SENDER_EMAIL) {
-    console.error('❌ Missing email configuration (MAILERSEND_API_TOKEN or EMAIL_FROM)');
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('❌ Missing email configuration (EMAIL_USER or EMAIL_PASS)');
     throw new Error('Email service not configured correctly');
   }
 
   try {
-    const sentFrom = new Sender(DEFAULT_SENDER_EMAIL, DEFAULT_SENDER_NAME);
-    const recipients = [new Recipient(to)];
+    const mailOptions = {
+      from: `"TaskFlow" <${process.env.EMAIL_USER}>`,
+      to: to,
+      subject: subject,
+      html: html
+    };
 
-    const emailParams = new EmailParams()
-      .setFrom(sentFrom)
-      .setTo(recipients)
-      .setSubject(subject)
-      .setHtml(html);
-
-    console.log('Sending email via MailerSend API...');
-    const response = await mailerSend.email.send(emailParams);
+    console.log('Sending email via Gmail SMTP...');
+    const info = await transporter.sendMail(mailOptions);
 
     console.log('✅ Email sent successfully!');
-    console.log('Response:', JSON.stringify(response, null, 2));
-    return { success: true, response };
+    console.log('Message ID:', info.messageId);
+    return { success: true, messageId: info.messageId };
 
   } catch (err) {
-    console.error('❌ MailerSend Error Details:');
+    console.error('❌ Gmail SMTP Error Details:');
     console.error('Error message:', err.message);
-    console.error('Error body:', err.body);
     console.error('Full error:', JSON.stringify(err, null, 2));
-    throw new Error(err.body?.message || err.message || 'Failed to send email');
+    throw new Error(err.message || 'Failed to send email');
   }
 };
 
