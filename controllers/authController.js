@@ -179,7 +179,10 @@ const getCurrentUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: activeCompany ? activeCompany.role : 'employee',
-        company: companyName
+        company: companyName,
+        profilePicture: user.profilePicture,
+        phone: user.phone,
+        department: user.department
       }
     });
   } catch (error) {
