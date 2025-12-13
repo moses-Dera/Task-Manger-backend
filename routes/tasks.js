@@ -34,7 +34,7 @@ router.post('/test', auth, async (req, res) => {
 // Get tasks
 router.get('/', auth, async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, assigned_to } = req.query;
     let query = { company: req.user.company };
 
     console.log('=== TASK FETCH ===');
@@ -43,8 +43,14 @@ router.get('/', auth, async (req, res) => {
     if (req.user.role === 'employee') {
       query.assigned_to = req.user._id;
       console.log('Employee query:', query);
+    } else {
+      // For managers/admins, allow filtering by assigned_to
+      if (assigned_to) {
+        query.assigned_to = assigned_to;
+      }
     }
-    if (status) query.status = status;
+
+    if (status && status !== 'all') query.status = status;
 
     const tasks = await Task.find(query)
       .populate('assigned_to', 'name')
