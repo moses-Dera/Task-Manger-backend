@@ -34,7 +34,7 @@ router.post('/test', auth, async (req, res) => {
 // Get tasks
 router.get('/', auth, async (req, res) => {
   try {
-    const { status, assigned_to } = req.query;
+    const { status, assigned_to, start_date, end_date } = req.query;
     let query = { company: req.user.company };
 
     console.log('=== TASK FETCH ===');
@@ -51,6 +51,20 @@ router.get('/', auth, async (req, res) => {
     }
 
     if (status && status !== 'all') query.status = status;
+
+    // Date Range Filtering (createdAt)
+    if (start_date || end_date) {
+      query.createdAt = {};
+      if (start_date) {
+        query.createdAt.$gte = new Date(start_date);
+      }
+      if (end_date) {
+        // Set to end of the day
+        const end = new Date(end_date);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
 
     const tasks = await Task.find(query)
       .populate('assigned_to', 'name')
