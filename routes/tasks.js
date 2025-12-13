@@ -217,25 +217,21 @@ router.get('/:id/files', auth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
 
-    // Mock files - in a real app, you'd fetch from database
-    const mockFiles = [
-      {
-        id: '1',
-        name: 'requirements.pdf',
-        size: '1.2 MB',
-        uploadedBy: 'John Doe',
-        uploadedAt: new Date(Date.now() - 86400000).toISOString()
-      },
-      {
-        id: '2',
-        name: 'design-mockup.png',
-        size: '3.4 MB',
-        uploadedBy: 'Jane Smith',
-        uploadedAt: new Date(Date.now() - 172800000).toISOString()
-      }
-    ];
+    const files = await TaskFile.find({ task_id: task._id })
+      .populate('uploaded_by', 'name')
+      .sort({ createdAt: -1 });
 
-    res.json({ success: true, data: mockFiles });
+    const fileData = files.map(file => ({
+      id: file._id,
+      name: file.filename,
+      size: file.file_size,
+      mimeType: file.mime_type || 'application/octet-stream', // Ensure mimeType is passed
+      uploaded_by: file.uploaded_by,
+      uploadedAt: file.createdAt,
+      filename: file.filename // Important for URL construction in frontend
+    }));
+
+    res.json({ success: true, data: fileData });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
