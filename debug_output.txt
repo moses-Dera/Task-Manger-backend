@@ -1,0 +1,8 @@
+--- Date Boundaries ---
+Today (Start): Sat Dec 13 2025
+Tomorrow (Start): Sun Dec 14 2025
+Next Week (End): Sat Dec 20 2025
+-----------------------
+[TODAY] DEBUG: Task Due Today (Due: Sat Dec 13 2025)
+[THIS WEEK] DEBUG: Task Due Tomorrow (Due: Sun Dec 14 2025)
+[LATER] DEBUG: Task Due Next Month (Due: Mon Jan 12 2026)
