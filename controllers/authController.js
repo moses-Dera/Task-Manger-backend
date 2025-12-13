@@ -88,7 +88,19 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company },
+    // Find the active company details
+    const activeCompany = user.companies.find(c =>
+      c.company.toString() === user.currentCompany.toString()
+    );
+
+    if (!activeCompany) {
+      return res.status(400).json({ success: false, error: 'User has no active company' });
+    }
+
+    const role = activeCompany.role;
+    const company = activeCompany.company;
+
+    const token = jwt.sign({ userId: user._id, email: user.email, role, company },
       process.env.JWT_SECRET, { expiresIn: '24h' });
 
     // Log login activity
@@ -97,9 +109,10 @@ const login = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company }
+      user: { id: user._id, name: user.name, email: user.email, role, company }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

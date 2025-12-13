@@ -9,13 +9,15 @@ const logActivity = (action) => {
         try {
             // Only log if user is authenticated
             if (req.user) {
+                const company = req.user.company || req.user.currentCompany;
+
                 const log = new ActivityLog({
                     user_id: req.user._id,
                     action: action,
                     details: `${req.method} ${req.originalUrl}`,
                     ip_address: req.ip || req.connection.remoteAddress,
                     user_agent: req.get('user-agent'),
-                    company: req.user.company
+                    company: company ? company.toString() : 'unknown'
                 });
 
                 // Save asynchronously without blocking the request
@@ -41,18 +43,20 @@ const logActivity = (action) => {
  */
 const createActivityLog = async (user, action, details = '') => {
     try {
+        const company = user.company || user.currentCompany;
+
         const log = new ActivityLog({
             user_id: user._id || user.userId,
             action: action,
             details: details,
-            company: user.company
+            company: company ? company.toString() : 'unknown'
         });
 
         await log.save();
         return log;
     } catch (error) {
         console.error('Failed to create activity log:', error);
-        return null;
+        return null; // Return null instead of throwing to prevent blocking the main flow
     }
 };
 
