@@ -72,13 +72,33 @@ const getPerformance = async (req, res) => {
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     console.log(`Performance stats: ${completedTasks}/${totalTasks} = ${completionRate}%`);
 
+    // Generate weekly performance trend (last 4 weeks)
+    const weeklyData = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - (i * 7) - 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+
+      const weekTasks = allTasks.filter(task => {
+        const taskDate = new Date(task.updatedAt || task.createdAt); // Use updatedAt if available, else createdAt
+        return taskDate >= weekStart && taskDate < weekEnd && task.status === 'completed';
+      }).length;
+
+      weeklyData.push({
+        name: `Week ${4 - i}`,
+        value: weekTasks
+      });
+    }
+
     const data = {
       total_tasks: totalTasks,
       completed_tasks: completedTasks,
       pending_tasks: pendingTasks,
       in_progress_tasks: inProgressTasks,
       overdue_tasks: overdueTasks,
-      completion_rate: completionRate
+      completion_rate: completionRate,
+      weekly_performance: weeklyData
     };
 
     res.json({ success: true, data });
