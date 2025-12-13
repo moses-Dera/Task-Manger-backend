@@ -2,35 +2,29 @@ const { validationResult } = require('express-validator');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const multer = require('multer');
-const path = require('path');
+const { upload } = require('../config/cloudinary');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/chat-attachments/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|zip/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only images, PDFs, and documents are allowed.'));
+// Upload attachment
+const uploadAttachment = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, error: 'No files uploaded' });
     }
+
+    const attachments = req.files.map(file => ({
+      filename: file.filename, // Cloudinary filename
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      url: file.path // Cloudinary URL
+    }));
+
+    res.json({ success: true, data: attachments });
+  } catch (error) {
+    console.error('Upload attachment error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
   }
-});
+};
 
 // Get messages with enhanced filtering and pagination
 const getMessages = async (req, res) => {

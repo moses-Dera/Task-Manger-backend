@@ -3,6 +3,8 @@ const Task = require('../models/Task');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const mongoose = require('mongoose');
+const TaskFile = require('../models/TaskFile');
+const { upload } = require('../config/cloudinary');
 
 const router = express.Router();
 
@@ -11,7 +13,7 @@ router.post('/test', auth, async (req, res) => {
   try {
     console.log('TEST ENDPOINT - User:', req.user);
     console.log('TEST ENDPOINT - Body:', req.body);
-    
+
     const testTask = {
       title: 'Test Task',
       description: 'Test Description',
@@ -20,7 +22,7 @@ router.post('/test', auth, async (req, res) => {
       created_by: req.user._id,
       company: req.user.company
     };
-    
+
     const task = await Task.create(testTask);
     res.json({ success: true, message: 'Test task created', data: task });
   } catch (error) {
@@ -37,7 +39,7 @@ router.get('/', auth, async (req, res) => {
 
     console.log('=== TASK FETCH ===');
     console.log('User:', { id: req.user._id, role: req.user.role, company: req.user.company });
-    
+
     if (req.user.role === 'employee') {
       query.assigned_to = req.user._id;
       console.log('Employee query:', query);
@@ -64,11 +66,11 @@ router.get('/', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     let assigned_to = req.user._id;
-    
+
     console.log('=== TASK CREATION ===');
     console.log('Request body:', req.body);
     console.log('Creator:', { id: req.user._id, role: req.user.role, company: req.user.company });
-    
+
     if (req.body.assigned_to) {
       // Check if it's a valid ObjectId (from manager dashboard)
       if (mongoose.Types.ObjectId.isValid(req.body.assigned_to)) {
@@ -77,13 +79,13 @@ router.post('/', auth, async (req, res) => {
       } else {
         // Fallback: search by username or name
         console.log('Searching for user by username/name:', req.body.assigned_to);
-        const assignedUser = await User.findOne({ 
+        const assignedUser = await User.findOne({
           $or: [
             { username: req.body.assigned_to },
             { name: { $regex: new RegExp(req.body.assigned_to, 'i') } },
             { email: req.body.assigned_to }
           ],
-          company: req.user.company 
+          company: req.user.company
         });
         if (assignedUser) {
           console.log('Found user:', { id: assignedUser._id, name: assignedUser.name });
@@ -93,12 +95,12 @@ router.post('/', auth, async (req, res) => {
         }
       }
     }
-    
+
     // Validate and sanitize input
     const title = req.body.title ? req.body.title.trim().substring(0, 200) : 'Default Task';
     const description = req.body.description ? req.body.description.trim().substring(0, 1000) : '';
     const priority = ['low', 'medium', 'high'].includes(req.body.priority) ? req.body.priority : 'medium';
-    
+
     const task = await Task.create({
       title,
       description,
@@ -108,14 +110,14 @@ router.post('/', auth, async (req, res) => {
       company: req.user.company,
       due_date: req.body.due_date || null
     });
-    
+
     console.log('Task created:', { id: task._id, title: task.title, assigned_to: task.assigned_to });
-    
+
     // Get updated task count for the assigned user
     const taskCount = await Task.countDocuments({ assigned_to, company: req.user.company });
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       data: task,
       updatedTaskCount: taskCount,
       assignedUserId: assigned_to
@@ -136,7 +138,7 @@ router.get('/:id', auth, async (req, res) => {
       .populate('assigned_to', 'name')
       .populate('created_by', 'name')
       .lean();
-    
+
     if (!task) {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
@@ -166,26 +168,42 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Upload file to task (mock implementation)
-router.post('/:id/files', auth, async (req, res) => {
+// Upload file to task
+router.post('/:id/files', auth, upload.single('file'), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file uploaded' });
+    }
+
     const task = await Task.findOne({ _id: req.params.id, company: req.user.company });
-    
+
     if (!task) {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
 
-    // Mock file upload - in a real app, you'd use multer and cloud storage
-    const mockFile = {
-      id: Date.now().toString(),
-      name: 'uploaded-file.pdf',
-      size: '2.5 MB',
-      uploadedBy: req.user.name,
-      uploadedAt: new Date().toISOString()
-    };
+    const taskFile = new TaskFile({
+      task_id: task._id,
+      filename: req.file.originalname,
+      file_path: req.file.path, // Cloudinary URL
+      file_size: req.file.size,
+      uploaded_by: req.user._id
+    });
 
-    res.json({ success: true, data: mockFile });
+    await taskFile.save();
+
+    // Update task submission URL if it's a submission
+    // (Optional: logic to determine if this is a submission or just an attachment)
+    // For now, let's assume if the employee assigned to the task uploads it, it might be a submission
+    if (task.assigned_to.toString() === req.user._id.toString()) {
+      task.submission_url = req.file.path;
+      task.submission_date = new Date();
+      task.status = 'completed'; // Auto-complete on submission? Or maybe just update status
+      await task.save();
+    }
+
+    res.status(201).json({ success: true, data: taskFile });
   } catch (error) {
+    console.error('Task file upload error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -194,7 +212,7 @@ router.post('/:id/files', auth, async (req, res) => {
 router.get('/:id/files', auth, async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, company: req.user.company });
-    
+
     if (!task) {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
@@ -228,36 +246,36 @@ router.get('/performance/stats', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const now = new Date();
-    
+
     // Get all tasks for the employee
     const allTasks = await Task.find({ assigned_to: userId, company: req.user.company }).lean();
-    
+
     // Calculate stats
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter(task => task.status === 'completed').length;
-    const onTimeCompleted = allTasks.filter(task => 
-      task.status === 'completed' && 
-      task.due_date && 
+    const onTimeCompleted = allTasks.filter(task =>
+      task.status === 'completed' &&
+      task.due_date &&
       task.updatedAt <= new Date(task.due_date)
     ).length;
-    
+
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     const onTimeRate = completedTasks > 0 ? Math.round((onTimeCompleted / completedTasks) * 100) : 0;
-    
+
     // Calculate performance score (A+, A, B, C)
     let performanceScore = 'N/A';
     if (totalTasks > 0) {
       const score = (completionRate * 0.7) + (onTimeRate * 0.3);
       performanceScore = score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B' : 'C';
     }
-    
+
     // Calculate streak (consecutive days with completed tasks)
     const completedByDate = {};
     allTasks.filter(task => task.status === 'completed' && task.updatedAt).forEach(task => {
       const date = new Date(task.updatedAt).toDateString();
       completedByDate[date] = true;
     });
-    
+
     let streak = 0;
     const currentDate = new Date();
     for (let i = 0; i < 30; i++) {
@@ -269,7 +287,7 @@ router.get('/performance/stats', auth, async (req, res) => {
         break;
       }
     }
-    
+
     // Generate weekly performance trend (last 4 weeks)
     const weeklyData = [];
     for (let i = 3; i >= 0; i--) {
@@ -277,18 +295,18 @@ router.get('/performance/stats', auth, async (req, res) => {
       weekStart.setDate(weekStart.getDate() - (i * 7) - 7);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 7);
-      
+
       const weekTasks = allTasks.filter(task => {
         const taskDate = new Date(task.updatedAt);
         return taskDate >= weekStart && taskDate < weekEnd && task.status === 'completed';
       }).length;
-      
+
       weeklyData.push({
         name: `Week ${4 - i}`,
         value: weekTasks
       });
     }
-    
+
     const data = {
       total_tasks: totalTasks,
       completed_tasks: completedTasks,
@@ -298,7 +316,7 @@ router.get('/performance/stats', auth, async (req, res) => {
       streak_days: streak,
       weekly_performance: weeklyData
     };
-    
+
     res.json({ success: true, data });
   } catch (error) {
     console.error('Performance stats error:', error);
