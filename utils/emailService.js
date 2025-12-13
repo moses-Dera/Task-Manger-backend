@@ -53,7 +53,14 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
+const getFrontendUrl = () => {
+  const url = process.env.FRONTEND_URL || 'http://localhost:5173';
+  return url.replace(/\/$/, ''); // Remove trailing slash if present
+};
+
 const sendWelcomeEmail = async (user, tempPassword = null) => {
+  const frontendUrl = getFrontendUrl();
+  const dashboardUrl = `${frontendUrl}/login`;
   const subject = 'Welcome to TaskFlow';
   const html = `
     <!DOCTYPE html>
@@ -70,7 +77,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
             <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
               <!-- Header -->
               <tr>
-                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; padding: 40px 30px; text-align: center;">
                   <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">Welcome to TaskFlow! 🎉</h1>
                 </td>
               </tr>
@@ -126,13 +133,21 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center" style="padding: 20px 0;">
-                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" 
-                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                        <a href="${dashboardUrl}" 
+                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
                           Go to Dashboard
                         </a>
                       </td>
                     </tr>
                   </table>
+
+                  <!-- Alternative Link -->
+                  <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+                    Or copy and paste this link into your browser:
+                  </p>
+                  <p style="margin: 10px 0 0 0; color: #667eea; font-size: 14px; word-break: break-all;">
+                    <a href="${dashboardUrl}" style="color: #667eea; text-decoration: underline;">${dashboardUrl}</a>
+                  </p>
                   
                   <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
                     If you have any questions or need assistance, feel free to reach out to our support team.
@@ -162,7 +177,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = getFrontendUrl();
   const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
   const subject = 'Password Reset Request';
@@ -181,7 +196,7 @@ const sendPasswordResetEmail = async (user, resetToken) => {
             <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
               <!-- Header -->
               <tr>
-                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; padding: 40px 30px; text-align: center;">
                   <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">Password Reset Request 🔐</h1>
                 </td>
               </tr>
@@ -204,7 +219,7 @@ const sendPasswordResetEmail = async (user, resetToken) => {
                     <tr>
                       <td align="center" style="padding: 20px 0;">
                         <a href="${resetUrl}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
                           Reset Password
                         </a>
                       </td>
@@ -274,7 +289,7 @@ const sendMeetingNotification = async (user, meetingDetails) => {
             <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
               <!-- Header -->
               <tr>
-                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; padding: 40px 30px; text-align: center;">
                   <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">Team Meeting Scheduled 📅</h1>
                 </td>
               </tr>
@@ -320,7 +335,7 @@ const sendMeetingNotification = async (user, meetingDetails) => {
                     <tr>
                       <td align="center" style="padding: 20px 0;">
                         <a href="${meetingDetails.meeting_url}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
                           Join Meeting
                         </a>
                       </td>

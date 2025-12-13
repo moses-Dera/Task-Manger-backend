@@ -12,6 +12,7 @@ async function checkEmailConfig() {
     console.log(`MAILERSEND_API_TOKEN: ${token ? 'Present (' + token.substring(0, 8) + '...)' : 'Missing'}`);
     console.log(`EMAIL_FROM: ${emailFrom || 'Missing'}`);
     console.log(`EMAIL_USER: ${process.env.EMAIL_USER || 'Missing'}`);
+    console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL || 'Missing (Default: http://localhost:5173)'}`);
 
     if (!token) {
         console.error('❌ Error: MAILERSEND_API_TOKEN is missing in .env');
