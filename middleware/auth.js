@@ -9,10 +9,20 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('name email role company').lean();
-    
+    const user = await User.findById(decoded.userId).select('name email companies currentCompany').lean();
+
     if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+
+    // Derive role and company from the companies array based on currentCompany
+    if (user.currentCompany && user.companies) {
+      const activeCompany = user.companies.find(c => c.company.toString() === user.currentCompany.toString());
+      if (activeCompany) {
+        user.role = activeCompany.role;
+        user.company = activeCompany.company;
+        user.department = activeCompany.department;
+      }
     }
 
     req.user = user;

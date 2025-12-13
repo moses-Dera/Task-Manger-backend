@@ -23,15 +23,34 @@ const signup = async (req, res) => {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
-    const user = new User({ name, email, password, role: role || 'employee', company });
+    // Create user with correct schema structure (multi-tenant)
+    const user = new User({
+      name,
+      email,
+      password,
+      companies: [{
+        company: company,
+        role: role || 'employee',
+        isActive: true,
+        joinedAt: new Date()
+      }],
+      currentCompany: company
+    });
     await user.save();
 
     console.log('=== SIGNUP WELCOME EMAIL ===');
     console.log('User created:', { id: user._id, name: user.name, email: user.email });
     console.log('Attempting to send welcome email...');
 
+    // Prepare user object for email
+    const userForEmail = {
+      ...user.toObject(),
+      role: role || 'employee',
+      company: company
+    };
+
     // Send welcome email asynchronously (non-blocking)
-    sendWelcomeEmail(user).then(() => {
+    sendWelcomeEmail(userForEmail).then(() => {
       console.log('✅ Signup welcome email sent successfully to:', user.email);
     }).catch(error => {
       console.error('❌ Signup welcome email failed for:', user.email);

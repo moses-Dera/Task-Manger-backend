@@ -127,19 +127,33 @@ const inviteUser = async (req, res) => {
     }
 
     const tempPassword = crypto.randomBytes(6).toString('hex');
+
+    // Create user with correct schema structure (multi-tenant)
     const user = await User.create({
       name: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ').trim(),
       email: email.toLowerCase().trim(),
       password: tempPassword,
-      role,
-      company: req.user.company
+      companies: [{
+        company: req.user.company,
+        role: role,
+        isActive: true,
+        joinedAt: new Date()
+      }],
+      currentCompany: req.user.company
     });
 
     console.log('User created with email:', user.email);
 
+    // Prepare user object for email (needs explicit role/company properties)
+    const userForEmail = {
+      ...user.toObject(),
+      role: role,
+      company: req.user.company // We can use the ID or fetch the name if needed, but ID is what was there before
+    };
+
     // Send welcome email with temporary password
     console.log('Sending welcome email to invited user:', user.email);
-    sendWelcomeEmail(user, tempPassword).then(() => {
+    sendWelcomeEmail(userForEmail, tempPassword).then(() => {
       console.log('Welcome email sent successfully to invited user:', user.email);
     }).catch(error => {
       console.error('Welcome email failed for invited user:', user.email, error.message);
