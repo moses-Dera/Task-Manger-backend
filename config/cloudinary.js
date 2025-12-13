@@ -4,6 +4,18 @@ const multer = require('multer');
 require('dotenv').config();
 
 if (process.env.CLOUDINARY_URL) {
+    // Validate URL format to prevent crashes with unclear errors
+    if (!process.env.CLOUDINARY_URL.startsWith('cloudinary://')) {
+        console.error('❌ ERROR: Invalid CLOUDINARY_URL environment variable.');
+        console.error('   It must start with "cloudinary://".');
+        console.error('   Format: cloudinary://<api_key>:<api_secret>@<cloud_name>');
+        // Attempt to fix it if it's just missing the protocol (common copy-paste error)
+        if (!process.env.CLOUDINARY_URL.includes('://')) {
+            console.log('   Attempting to auto-fix by adding cloudinary:// prefix...');
+            process.env.CLOUDINARY_URL = `cloudinary://${process.env.CLOUDINARY_URL}`;
+        }
+    }
+
     cloudinary.config({
         secure: true
     });
