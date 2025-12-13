@@ -544,7 +544,7 @@ const getTeamMembers = async (req, res) => {
 
     // Get all users in the same company except current user
     const teamMembers = await User.find({
-      company: company,
+      'companies.company': company,
       _id: { $ne: req.user._id }
     }).select('name email role createdAt').sort({ name: 1 });
 
