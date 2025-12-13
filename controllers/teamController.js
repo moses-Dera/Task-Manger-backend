@@ -199,16 +199,26 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    if (targetUser.company !== req.user.company && req.user.role !== 'admin') {
+    const belongsToCompany = targetUser.companies.some(c => c.company.toString() === req.user.company.toString());
+    if (!belongsToCompany && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (role) updateData.role = role;
+    if (role) updateData.role = role; // Note: This should probably update the role inside the companies array
     if (phone !== undefined) updateData.phone = phone;
     if (department !== undefined) updateData.department = department;
+
+    // Update role within the specific company if provided
+    if (role) {
+      await User.updateOne(
+        { _id: userId, 'companies.company': req.user.company },
+        { $set: { 'companies.$.role': role } }
+      );
+      delete updateData.role; // Don't update top-level role if it doesn't exist or is handled differently
+    }
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
     res.json({ success: true, data: updatedUser });
@@ -230,7 +240,8 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    if (targetUser.company !== req.user.company && req.user.role !== 'admin') {
+    const belongsToCompany = targetUser.companies.some(c => c.company.toString() === req.user.company.toString());
+    if (!belongsToCompany && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
