@@ -245,10 +245,11 @@ router.get('/:id/files', auth, async (req, res) => {
       id: file._id,
       name: file.filename,
       size: file.file_size,
-      mimeType: file.mime_type || 'application/octet-stream', // Ensure mimeType is passed
+      mimeType: file.mime_type || 'application/octet-stream',
       uploaded_by: file.uploaded_by,
       uploadedAt: file.createdAt,
-      filename: file.filename // Important for URL construction in frontend
+      filename: file.filename,
+      url: file.file_path // Return the Cloudinary URL
     }));
 
     res.json({ success: true, data: fileData });
