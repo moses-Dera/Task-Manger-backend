@@ -8,8 +8,11 @@ const { sendWelcomeEmail, sendMeetingNotification } = require('../utils/emailSer
 
 const getEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: 'employee', company: req.user.company })
-      .select('name email role phone department')
+    const employees = await User.find({
+      'companies.company': req.user.company,
+      'companies.role': 'employee'
+    })
+      .select('name email companies phone department')
       .lean();
 
     const employeesWithStats = await Promise.all(employees.map(async (employee) => {
@@ -22,11 +25,15 @@ const getEmployees = async (req, res) => {
         performanceScore = completionRate >= 90 ? 'A+' : completionRate >= 80 ? 'A' : completionRate >= 70 ? 'B' : 'C';
       }
 
+      // Find the role for this specific company
+      const companyInfo = employee.companies.find(c => c.company.toString() === req.user.company.toString());
+      const role = companyInfo ? companyInfo.role : 'employee';
+
       return {
         id: employee._id,
         name: employee.name,
         email: employee.email,
-        role: employee.role,
+        role: role,
         tasks_assigned: tasksAssigned,
         tasks_completed: tasksCompleted,
         performance_score: performanceScore,
