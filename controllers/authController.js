@@ -1,7 +1,9 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 const User = require('../models/User');
+const Company = require('../models/Company');
 const { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetConfirmation } = require('../utils/emailService');
 const { createActivityLog } = require('../middleware/activityLogger');
 
@@ -23,18 +25,39 @@ const signup = async (req, res) => {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
+    let companyId;
+    let companyName;
+
+    // Check if company input is a valid ObjectId
+    if (mongoose.Types.ObjectId.isValid(company)) {
+      const existingCompany = await Company.findById(company);
+      if (!existingCompany) {
+        return res.status(400).json({ success: false, error: 'Invalid company ID' });
+      }
+      companyId = existingCompany._id;
+      companyName = existingCompany.name;
+    } else {
+      // Treat as new company name
+      const newCompany = await Company.create({
+        name: company,
+        email: `contact@${company.replace(/\s+/g, '').toLowerCase()}.com` // Placeholder email
+      });
+      companyId = newCompany._id;
+      companyName = newCompany.name;
+    }
+
     // Create user with correct schema structure (multi-tenant)
     const user = new User({
       name,
       email,
       password,
       companies: [{
-        company: company,
+        company: companyId,
         role: role || 'employee',
         isActive: true,
         joinedAt: new Date()
       }],
-      currentCompany: company
+      currentCompany: companyId
     });
     await user.save();
 
@@ -43,10 +66,11 @@ const signup = async (req, res) => {
     console.log('Attempting to send welcome email...');
 
     // Prepare user object for email
+    // Prepare user object for email
     const userForEmail = {
       ...user.toObject(),
       role: role || 'employee',
-      company: company
+      company: companyId
     };
 
     // Send welcome email asynchronously (non-blocking)
