@@ -61,6 +61,7 @@ const getFrontendUrl = () => {
 const sendWelcomeEmail = async (user, tempPassword = null) => {
   const frontendUrl = getFrontendUrl();
   const dashboardUrl = `${frontendUrl}/login`;
+  console.log('Generated Dashboard URL:', dashboardUrl);
   const subject = 'Welcome to TaskFlow';
   const html = `
     <!DOCTYPE html>
@@ -133,10 +134,16 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center" style="padding: 20px 0;">
-                        <a href="${dashboardUrl}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
-                          Go to Dashboard
-                        </a>
+                        <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                          <tr>
+                            <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
+                              <a href="${dashboardUrl}" target="_blank"
+                                 style="display: inline-block; padding: 16px 40px; font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; background-color: #667eea; border-radius: 8px; border: 1px solid #667eea;">
+                                Go to Dashboard
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                     </tr>
                   </table>
@@ -146,7 +153,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
                     Or copy and paste this link into your browser:
                   </p>
                   <p style="margin: 10px 0 0 0; color: #667eea; font-size: 14px; word-break: break-all;">
-                    <a href="${dashboardUrl}" style="color: #667eea; text-decoration: underline;">${dashboardUrl}</a>
+                    <a href="${dashboardUrl}" target="_blank" style="color: #667eea; text-decoration: underline;">${dashboardUrl}</a>
                   </p>
                   
                   <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
