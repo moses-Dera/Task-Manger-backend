@@ -70,7 +70,7 @@ const signup = async (req, res) => {
     const userForEmail = {
       ...user.toObject(),
       role: role || 'employee',
-      company: companyId
+      company: companyName
     };
 
     // Send welcome email asynchronously (non-blocking)
@@ -90,7 +90,7 @@ const signup = async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, company: companyName }
     });
   } catch (error) {
     console.error('[Auth] Signup error:', error);
@@ -121,6 +121,10 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, error: 'User has no active company' });
     }
 
+    // Fetch company details to get the name
+    const companyDetails = await Company.findById(activeCompany.company);
+    const companyName = companyDetails ? companyDetails.name : 'Unknown Company';
+
     const role = activeCompany.role;
     const company = activeCompany.company;
 
@@ -133,7 +137,7 @@ const login = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role, company }
+      user: { id: user._id, name: user.name, email: user.email, role, company: companyName }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -142,10 +146,39 @@ const login = async (req, res) => {
 };
 
 const getCurrentUser = async (req, res) => {
-  res.json({
-    success: true,
-    user: { id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, company: req.user.company }
-  });
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Find active company to get role and company ID
+    const activeCompany = user.companies.find(c =>
+      c.company.toString() === user.currentCompany.toString()
+    );
+
+    let companyName = 'Unknown Company';
+    if (activeCompany) {
+      const companyDetails = await Company.findById(activeCompany.company);
+      if (companyDetails) {
+        companyName = companyDetails.name;
+      }
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: activeCompany ? activeCompany.role : 'employee',
+        company: companyName
+      }
+    });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 };
 
 const forgotPassword = async (req, res) => {
