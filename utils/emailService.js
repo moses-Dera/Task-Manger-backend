@@ -227,10 +227,16 @@ const sendPasswordResetEmail = async (user, resetToken) => {
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center" style="padding: 20px 0;">
-                        <a href="${resetUrl}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
-                          Reset Password
-                        </a>
+                        <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                          <tr>
+                            <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
+                              <a href="${resetUrl}"
+                                 style="display: inline-block; padding: 16px 40px; font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; background-color: #667eea; border-radius: 8px; border: 1px solid #667eea;">
+                                Reset Password
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                     </tr>
                   </table>
@@ -343,10 +349,16 @@ const sendMeetingNotification = async (user, meetingDetails) => {
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center" style="padding: 20px 0;">
-                        <a href="${meetingDetails.meeting_url}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
-                          Join Meeting
-                        </a>
+                        <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                          <tr>
+                            <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
+                              <a href="${meetingDetails.meeting_url}"
+                                 style="display: inline-block; padding: 16px 40px; font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; background-color: #667eea; border-radius: 8px; border: 1px solid #667eea;">
+                                Join Meeting
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                     </tr>
                   </table>

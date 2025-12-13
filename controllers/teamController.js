@@ -256,8 +256,8 @@ const notifyTeamMeeting = async (req, res) => {
 
     // Get all employees in company
     const employees = await User.find({
-      company: req.user.company,
-      role: 'employee'
+      'companies.company': req.user.company,
+      'companies.role': 'employee'
     }).select('email name _id').lean();
 
     console.log('Found employees for meeting notification:', employees.map(e => ({ name: e.name, email: e.email })));
