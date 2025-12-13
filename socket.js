@@ -61,40 +61,7 @@ function initializeSocket(io) {
 
         // ==================== CHAT EVENTS ====================
 
-        /**
-         * Handle new chat message
-         * Payload: { recipientId, message }
-         */
-        socket.on('send_message', async (data) => {
-            try {
-                console.log('📨 Message from', socket.userName, 'to', data.recipientId);
 
-                const messageData = {
-                    senderId: socket.userId,
-                    senderName: socket.userName,
-                    recipientId: data.recipientId,
-                    message: data.message,
-                    timestamp: new Date()
-                };
-
-                // Send to specific recipient if specified
-                if (data.recipientId) {
-                    const recipientSocketId = onlineUsers.get(data.recipientId);
-                    if (recipientSocketId) {
-                        io.to(recipientSocketId).emit('new_message', messageData);
-                    }
-                } else {
-                    // Broadcast to company room (group message)
-                    socket.to(`company_${socket.userCompany}`).emit('new_message', messageData);
-                }
-
-                // Confirm to sender
-                socket.emit('message_sent', { success: true, messageData });
-            } catch (error) {
-                console.error('Error sending message:', error);
-                socket.emit('message_error', { error: 'Failed to send message' });
-            }
-        });
 
         /**
          * Handle typing indicator
