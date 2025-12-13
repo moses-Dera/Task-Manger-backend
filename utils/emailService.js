@@ -61,7 +61,9 @@ const getFrontendUrl = () => {
 const sendWelcomeEmail = async (user, tempPassword = null) => {
   const frontendUrl = getFrontendUrl();
   const dashboardUrl = `${frontendUrl}/login`;
+  const magicLink = user.magicToken ? `${frontendUrl}/magic-login?token=${user.magicToken}` : dashboardUrl;
   console.log('Generated Dashboard URL:', dashboardUrl);
+  console.log('Generated Magic Link:', magicLink);
   const subject = 'Welcome to TaskFlow';
   const html = `
     <!DOCTYPE html>
@@ -137,7 +139,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
                         <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                           <tr>
                             <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
-                              <a href="${dashboardUrl}" target="_blank"
+                              <a href="${magicLink}" target="_blank"
                                  style="display: inline-block; padding: 16px 40px; font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; background-color: #667eea; border-radius: 8px; border: 1px solid #667eea;">
                                 Go to Dashboard
                               </a>

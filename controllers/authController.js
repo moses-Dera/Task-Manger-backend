@@ -65,12 +65,22 @@ const signup = async (req, res) => {
     console.log('User created:', { id: user._id, name: user.name, email: user.email });
     console.log('Attempting to send welcome email...');
 
-    // Prepare user object for email
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company },
+      process.env.JWT_SECRET, { expiresIn: '24h' });
+
+    // Generate Magic Token (expires in 1 hour)
+    const magicToken = jwt.sign(
+      { userId: user._id, type: 'magic-link' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     // Prepare user object for email
     const userForEmail = {
       ...user.toObject(),
       role: role || 'employee',
-      company: companyName
+      company: companyName,
+      magicToken // Pass token to email service
     };
 
     // Send welcome email asynchronously (non-blocking)
@@ -80,9 +90,6 @@ const signup = async (req, res) => {
       console.error('❌ Signup welcome email failed for:', user.email);
       console.error('Error details:', error.message);
     });
-
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company },
-      process.env.JWT_SECRET, { expiresIn: '24h' });
 
     // Log signup activity
     createActivityLog(user, 'signed up', `New ${role || 'employee'} account created`);
@@ -244,10 +251,72 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const verifyMagicLink = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'Token is required' });
+    }
+
+    // Verify the magic token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check if it's a magic token (optional, if we add a type claim)
+    // For now, we just check if the user exists
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Find active company
+    const activeCompany = user.companies.find(c =>
+      c.company.toString() === user.currentCompany.toString()
+    );
+
+    if (!activeCompany) {
+      return res.status(400).json({ success: false, error: 'User has no active company' });
+    }
+
+    // Fetch company details
+    const companyDetails = await Company.findById(activeCompany.company);
+    const companyName = companyDetails ? companyDetails.name : 'Unknown Company';
+
+    // Generate session token (standard login token)
+    const sessionToken = jwt.sign(
+      { userId: user._id, email: user.email, role: activeCompany.role, company: activeCompany.company },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Log activity
+    createActivityLog(user, 'logged in', 'User logged in via Magic Link');
+
+    res.json({
+      success: true,
+      token: sessionToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: activeCompany.role,
+        company: companyName
+      }
+    });
+
+  } catch (error) {
+    console.error('Magic link verification error:', error);
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(400).json({ success: false, error: 'Invalid or expired link' });
+    }
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
 module.exports = {
   signup,
   login,
   getCurrentUser,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  verifyMagicLink
 };

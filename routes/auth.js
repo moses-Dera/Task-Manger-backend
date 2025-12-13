@@ -2,7 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const { auth } = require('../middleware/auth');
 const { loginLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
-const { signup, login, getCurrentUser, forgotPassword, resetPassword } = require('../controllers/authController');
+const { signup, login, getCurrentUser, forgotPassword, resetPassword, verifyMagicLink } = require('../controllers/authController');
 const { sendWelcomeEmail } = require('../utils/emailService');
 
 const router = express.Router();
@@ -146,6 +146,10 @@ router.post('/reset-password', [
   body('token').notEmpty().withMessage('Reset token is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], resetPassword);
+
+router.post('/verify-magic-link', [
+  body('token').notEmpty().withMessage('Token is required')
+], verifyMagicLink);
 
 // Test email endpoint (for development/debugging)
 router.post('/test-email', [
