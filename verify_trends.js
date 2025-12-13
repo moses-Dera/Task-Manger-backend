@@ -65,7 +65,13 @@ async function verifyTrends() {
         }, {
             headers: { Authorization: `Bearer ${managerToken}` }
         });
+
+        if (!taskRes.data.success) {
+            throw new Error('Task creation failed: ' + JSON.stringify(taskRes.data));
+        }
+
         const taskId = taskRes.data.data._id;
+        console.log('Task Created with ID:', taskId);
 
         // 4. Complete the Task (as Employee)
         console.log('Completing Task...');
@@ -91,6 +97,10 @@ async function verifyTrends() {
 
     } catch (error) {
         console.error('Verification Failed:', error.response ? error.response.data : error.message);
+        if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Headers:', error.response.headers);
+        }
     }
 }
 

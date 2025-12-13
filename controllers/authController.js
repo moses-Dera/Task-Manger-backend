@@ -65,7 +65,7 @@ const signup = async (req, res) => {
     console.log('User created:', { id: user._id, name: user.name, email: user.email });
     console.log('Attempting to send welcome email...');
 
-    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role, company: user.company },
+    const token = jwt.sign({ userId: user._id, email: user.email, role: role || 'employee', company: companyId },
       process.env.JWT_SECRET, { expiresIn: '24h' });
 
     // Generate Magic Token (expires in 1 hour)
