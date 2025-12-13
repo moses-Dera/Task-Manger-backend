@@ -555,27 +555,7 @@ const getTeamMembers = async (req, res) => {
   }
 };
 
-// Upload attachment
-const uploadAttachment = async (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, error: 'No files uploaded' });
-    }
 
-    const attachments = req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      size: file.size,
-      url: `/uploads/chat-attachments/${file.filename}`
-    }));
-
-    res.json({ success: true, data: attachments });
-  } catch (error) {
-    console.error('Upload attachment error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-};
 
 module.exports = {
   getMessages,
