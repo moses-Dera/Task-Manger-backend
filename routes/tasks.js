@@ -348,6 +348,65 @@ router.get('/performance/stats', auth, async (req, res) => {
       });
     }
 
+    // Calculate Achievements
+    const achievements = [];
+
+    // 1. Streak Master
+    if (streak >= 3) {
+      achievements.push({
+        id: 'streak_master',
+        title: 'Streak Master',
+        description: `Maintained a ${streak} day streak!`,
+        icon: 'TrendingUp',
+        color: 'blue'
+      });
+    }
+
+    // 2. Productivity Peak (tasks in last 7 days)
+    const last7DaysTasks = weeklyData[3]?.value || 0; // Last element is current week
+    if (last7DaysTasks >= 5) {
+      achievements.push({
+        id: 'productivity_peak',
+        title: 'Productivity Peak',
+        description: 'Completed 5+ tasks this week',
+        icon: 'Target',
+        color: 'purple'
+      });
+    }
+
+    // 3. Goal Crusher
+    if (onTimeRate === 100 && completedTasks >= 5) {
+      achievements.push({
+        id: 'goal_crusher',
+        title: 'Goal Crusher',
+        description: 'Perfect on-time record!',
+        icon: 'Award',
+        color: 'green'
+      });
+    }
+
+    // 4. Task Veteran
+    if (completedTasks >= 50) {
+      achievements.push({
+        id: 'task_veteran',
+        title: 'Task Veteran',
+        description: 'Completed over 50 tasks',
+        icon: 'Star', // We'll map this on frontend
+        color: 'yellow'
+      });
+    }
+
+    // If no achievements yet, adding a placeholder/encouragement
+    if (achievements.length === 0) {
+      achievements.push({
+        id: 'getting_started',
+        title: 'Rising Star',
+        description: 'Complete tasks to earn badges with accurate result!',
+        icon: 'Star',
+        color: 'gray'
+      });
+    }
+
     const data = {
       total_tasks: totalTasks,
       completed_tasks: completedTasks,
@@ -355,7 +414,8 @@ router.get('/performance/stats', auth, async (req, res) => {
       on_time_completion: onTimeRate,
       performance_score: performanceScore,
       streak_days: streak,
-      weekly_performance: weeklyData
+      weekly_performance: weeklyData,
+      achievements: achievements
     };
 
     res.json({ success: true, data });
