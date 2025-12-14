@@ -165,7 +165,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
                     Or copy and paste this link into your browser:
                   </p>
                   <p style="margin: 10px 0 0 0; color: #667eea; font-size: 14px; word-break: break-all;">
-                    <a href="${dashboardUrl}" target="_blank" style="color: #667eea; text-decoration: underline;">${dashboardUrl}</a>
+                    <a href="${magicLink}" target="_blank" style="color: #667eea; text-decoration: underline;">${magicLink}</a>
                   </p>
                   
                   <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
