@@ -28,8 +28,10 @@ function initializeSocket(io) {
             socket.userId = user._id.toString();
             socket.userEmail = user.email;
             socket.userName = user.name;
-            socket.userRole = user.role;
-            socket.userCompany = user.currentCompany || (user.companies && user.companies[0] ? user.companies[0].company : 'default');
+            socket.userRole = user.companies && user.companies[0] ? user.companies[0].role : 'employee';
+            socket.userCompany = user.currentCompany ? user.currentCompany.toString() : (user.companies && user.companies[0] ? user.companies[0].company.toString() : 'default');
+            
+            console.log('Socket user data:', { userId: socket.userId, userName: socket.userName, userRole: socket.userRole, userCompany: socket.userCompany });
 
             next();
         } catch (error) {
