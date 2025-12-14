@@ -335,13 +335,15 @@ router.get('/performance/stats', auth, async (req, res) => {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 7);
 
+      const weekStartStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
       const weekTasks = allTasks.filter(task => {
         const taskDate = new Date(task.updatedAt);
         return taskDate >= weekStart && taskDate < weekEnd && task.status === 'completed';
       }).length;
 
       weeklyData.push({
-        name: `Week ${4 - i}`,
+        name: weekStartStr,
         value: weekTasks
       });
     }
