@@ -54,6 +54,8 @@ function initializeSocket(io) {
 
         // Join company room for company-wide broadcasts
         socket.join(`company_${socket.userCompany}`);
+        // Join own room for direct messages
+        socket.join(socket.userId);
 
         // Send current online users to the newly connected user
         const onlineUsersList = Array.from(onlineUsers.keys());

@@ -111,7 +111,7 @@ const sendMessage = async (req, res) => {
     // Emit real-time message event via Socket.io
     const io = req.app.get('io');
     if (io) {
-      const targetRoom = recipient_id || company;
+      const targetRoom = recipient_id || `company_${company}`;
       io.to(targetRoom).emit('new_message', {
         type: 'new_message',
         message: message,
@@ -241,7 +241,7 @@ const addReaction = async (req, res) => {
     // Emit reaction via Socket.io
     const io = req.app.get('io');
     if (io) {
-      const targetRoom = message.recipient_id || message.company;
+      const targetRoom = message.recipient_id || `company_${message.company}`;
       io.to(targetRoom).emit('message_reaction', {
         messageId: message._id,
         emoji,
@@ -274,7 +274,7 @@ const removeReaction = async (req, res) => {
     // Emit reaction removal via Socket.io
     const io = req.app.get('io');
     if (io) {
-      const targetRoom = message.recipient_id || message.company;
+      const targetRoom = message.recipient_id || `company_${message.company}`;
       io.to(targetRoom).emit('message_reaction', {
         messageId: message._id,
         emoji,
@@ -407,7 +407,7 @@ const editMessage = async (req, res) => {
     // Emit edit via Socket.io
     const io = req.app.get('io');
     if (io) {
-      const targetRoom = message.recipient_id || message.company;
+      const targetRoom = message.recipient_id || `company_${message.company}`;
       io.to(targetRoom).emit('message_edited', {
         messageId: message._id,
         newMessage: message.message,
@@ -449,7 +449,7 @@ const deleteMessage = async (req, res) => {
     // Emit deletion via Socket.io
     const io = req.app.get('io');
     if (io) {
-      const targetRoom = message.recipient_id || message.company;
+      const targetRoom = message.recipient_id || `company_${message.company}`;
       io.to(targetRoom).emit('message_deleted', {
         messageId: message._id,
         deletedBy: req.user._id
@@ -492,7 +492,7 @@ const pinMessage = async (req, res) => {
     // Emit pin status via Socket.io
     const io = req.app.get('io');
     if (io) {
-      const targetRoom = message.recipient_id || message.company;
+      const targetRoom = message.recipient_id || `company_${message.company}`;
       io.to(targetRoom).emit('message_pinned', {
         messageId: message._id,
         isPinned,
