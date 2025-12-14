@@ -72,22 +72,27 @@ const getPerformance = async (req, res) => {
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     console.log(`Performance stats: ${completedTasks}/${totalTasks} = ${completionRate}%`);
 
-    // Generate weekly performance trend (last 4 weeks)
+    // Generate daily performance trend (last 14 days)
     const weeklyData = [];
-    for (let i = 3; i >= 0; i--) {
-      const weekStart = new Date(now);
-      weekStart.setDate(weekStart.getDate() - (i * 7) - 7);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 7);
+    for (let i = 13; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
-      const weekTasks = allTasks.filter(task => {
-        const taskDate = new Date(task.updatedAt || task.createdAt); // Use updatedAt if available, else createdAt
-        return taskDate >= weekStart && taskDate < weekEnd && task.status === 'completed';
+      const dayTasks = allTasks.filter(task => {
+        const taskDate = new Date(task.updatedAt || task.createdAt);
+        return taskDate >= startOfDay && taskDate <= endOfDay && task.status === 'completed';
       }).length;
 
+      // Format name as "Mon 14" or similar
+      const dayName = startOfDay.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+
       weeklyData.push({
-        name: `Week ${4 - i}`,
-        value: weekTasks
+        name: dayName,
+        value: dayTasks,
+        fullDate: dateStr
       });
     }
 
