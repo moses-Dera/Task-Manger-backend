@@ -182,6 +182,19 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
 
+    const io = req.app.get('io');
+    if (io) {
+      // Notify the assigned user
+      io.emitTaskUpdate(updatedTask.assigned_to, {
+        taskId: updatedTask._id,
+        action: 'updated',
+        status: updatedTask.status
+      });
+
+      // If reassigned, notify the new user too (optional, but good practice)
+      // For now focusing on performance trend which relies on status updates
+    }
+
     res.json({ success: true, data: updatedTask });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
@@ -219,6 +232,15 @@ router.post('/:id/files', auth, upload.single('file'), async (req, res) => {
       task.submission_date = new Date();
       task.status = 'completed'; // Auto-complete on submission? Or maybe just update status
       await task.save();
+
+      const io = req.app.get('io');
+      if (io) {
+        io.emitTaskUpdate(task.assigned_to, {
+          taskId: task._id,
+          action: 'updated',
+          status: 'completed'
+        });
+      }
     }
 
     res.status(201).json({ success: true, data: taskFile });
