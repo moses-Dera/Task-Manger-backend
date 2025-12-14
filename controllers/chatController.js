@@ -98,8 +98,40 @@ const sendMessage = async (req, res) => {
       attachments: req.body.attachments || []
     });
 
+    // OPTIMISTIC UPDATE: Emit BEFORE saving to DB for instant feedback
+    const io = req.app.get('io');
+    if (io) {
+      // Manually construct the populated message object for the frontend
+      // This avoids waiting for the DB save and populate
+      const optimisticMessage = {
+        ...message.toObject(),
+        sender_id: {
+          _id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role || 'employee'
+        },
+        recipient_id: recipient_id ? { _id: recipient_id } : null, // Minimal recipient data
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const targetRoom = recipient_id || `company_${company}`;
+
+      // Emit immediately
+      io.to(targetRoom).emit('new_message', {
+        type: 'new_message',
+        message: optimisticMessage,
+        senderId: req.user._id,
+        senderName: req.user.name
+      });
+    }
+
+    // Save to database asynchronously (user doesn't wait for this for UI update, but proper response does)
     console.log('Message to save:', message);
     await message.save();
+
+    // Populate for the API response (consistency)
     await message.populate('sender_id', 'name email role');
     if (recipient_id) {
       await message.populate('recipient_id', 'name email role');
@@ -108,41 +140,29 @@ const sendMessage = async (req, res) => {
       await message.populate('replyTo', 'message sender_id');
     }
 
-    // Emit real-time message event via Socket.io
-    const io = req.app.get('io');
-    if (io) {
-      const targetRoom = recipient_id || `company_${company}`;
-      io.to(targetRoom).emit('new_message', {
-        type: 'new_message',
-        message: message,
-        senderId: req.user._id,
-        senderName: req.user.name
-      });
+    // Handle notifications (can be async/detached if we wanted, but keeping here for now)
+    if (io && recipient_id) {
+      try {
+        const notification = new Notification({
+          user_id: recipient_id,
+          title: `New Message from ${req.user.name}`,
+          message: message.message.length > 50 ? message.message.substring(0, 50) + '...' : message.message,
+          type: 'message',
+          read: false
+        });
+        await notification.save();
 
-      // Create notification for direct messages
-      if (recipient_id) {
-        try {
-          const notification = new Notification({
-            user_id: recipient_id,
-            title: `New Message from ${req.user.name}`,
-            message: message.message.length > 50 ? message.message.substring(0, 50) + '...' : message.message,
-            type: 'message',
-            read: false
+        if (io.emitNotification) {
+          io.emitNotification(recipient_id, {
+            id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            timestamp: notification.createdAt
           });
-          await notification.save();
-
-          if (io.emitNotification) {
-            io.emitNotification(recipient_id, {
-              id: notification._id,
-              title: notification.title,
-              message: notification.message,
-              type: notification.type,
-              timestamp: notification.createdAt
-            });
-          }
-        } catch (notifError) {
-          console.error('Failed to create chat notification:', notifError);
         }
+      } catch (notifError) {
+        console.error('Failed to create chat notification:', notifError);
       }
     }
 

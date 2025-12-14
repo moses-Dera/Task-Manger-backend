@@ -28,6 +28,9 @@ const server = http.createServer(app);
 
 // Initialize Socket.io with CORS
 const io = new Server(server, {
+  transports: ['websocket', 'polling'], // Critical for Render free tier support
+  pingInterval: 25000, // Keep connection alive
+  pingTimeout: 60000, // Detect disconnects faster
   cors: {
     origin: [
       'http://localhost:5173',
