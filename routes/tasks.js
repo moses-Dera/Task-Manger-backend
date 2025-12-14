@@ -67,8 +67,8 @@ router.get('/', auth, async (req, res) => {
     }
 
     const tasks = await Task.find(query)
-      .populate('assigned_to', 'name')
-      .populate('created_by', 'name')
+      .populate('assigned_to', 'name profilePicture')
+      .populate('created_by', 'name profilePicture')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -155,8 +155,8 @@ router.post('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, company: req.user.company })
-      .populate('assigned_to', 'name')
-      .populate('created_by', 'name')
+      .populate('assigned_to', 'name profilePicture')
+      .populate('created_by', 'name profilePicture')
       .lean();
 
     if (!task) {
