@@ -27,8 +27,8 @@ const getTasks = async (req, res) => {
     }
 
     const tasks = await Task.find(query)
-      .populate('assigned_to', 'name')
-      .populate('created_by', 'name')
+      .populate('assigned_to', 'name profilePicture')
+      .populate('created_by', 'name profilePicture')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: tasks });
@@ -54,8 +54,8 @@ const createTask = async (req, res) => {
     await task.save();
 
     const populatedTask = await Task.findById(task._id)
-      .populate('assigned_to', 'name')
-      .populate('created_by', 'name');
+      .populate('assigned_to', 'name profilePicture')
+      .populate('created_by', 'name profilePicture');
 
     // Create notification for assigned employee
     try {
@@ -104,8 +104,8 @@ const createTask = async (req, res) => {
 const getTask = async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, company: req.user.company })
-      .populate('assigned_to', 'name')
-      .populate('created_by', 'name');
+      .populate('assigned_to', 'name profilePicture')
+      .populate('created_by', 'name profilePicture');
 
     if (!task) {
       return res.status(404).json({ success: false, error: 'Task not found' });
@@ -137,8 +137,8 @@ const updateTask = async (req, res) => {
       req.body,
       { new: true }
     )
-      .populate('assigned_to', 'name')
-      .populate('created_by', 'name');
+      .populate('assigned_to', 'name profilePicture')
+      .populate('created_by', 'name profilePicture');
 
     // Create notification for assigned employee if status changed or reassigned
     try {
