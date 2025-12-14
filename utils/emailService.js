@@ -434,9 +434,97 @@ const testEmail = async (to) => {
   return sendEmail(to, "Simple Test - TaskFlow", html);
 };
 
-const sendSimpleEmail = async (to) => {
-  const html = `<p>Simple test message</p>`;
-  return sendEmail(to, "Test", html);
+const sendExistingUserInvite = async (user, managerName, companyName) => {
+  const frontendUrl = getFrontendUrl();
+  const dashboardUrl = `${frontendUrl}/login`;
+
+  const subject = `You've been added to ${companyName} on TaskFlow`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Team Invitation</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-color: #667eea; padding: 40px 30px; text-align: center;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">New Team Invitation 🤝</h1>
+                </td>
+              </tr>
+              
+              <!-- Body -->
+              <tr>
+                <td style="padding: 40px 30px;">
+                  <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: 600;">Hello ${user.name},</h2>
+                  
+                  <p style="margin: 0 0 20px 0; color: #555555; font-size: 16px; line-height: 1.6;">
+                    <strong>${managerName}</strong> has added you to the <strong>${companyName}</strong> team on TaskFlow.
+                  </p>
+                  
+                  <p style="margin: 0 0 30px 0; color: #555555; font-size: 16px; line-height: 1.6;">
+                    You can now switch between your companies using your existing account. Log in to see your new workspace.
+                  </p>
+                  
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                          <tr>
+                            <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
+                              <!--[if mso]>
+                              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${dashboardUrl}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" stroke="f" fillcolor="#667eea">
+                                <w:anchorlock/>
+                                <center>
+                              <![endif]-->
+                                  <a href="${dashboardUrl}"
+                                     style="background-color:#667eea;border-radius:8px;color:#ffffff;display:inline-block;font-family:'Segoe UI', sans-serif;font-size:16px;font-weight:600;line-height:50px;text-align:center;text-decoration:none;width:200px;-webkit-text-size-adjust:none;">
+                                    Log In to TaskFlow
+                                  </a>
+                              <!--[if mso]>
+                                </center>
+                              </v:roundrect>
+                              <![endif]-->
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Alternative Link -->
+                  <p style="margin: 30px 0 0 0; color: #888888; font-size: 14px; line-height: 1.6;">
+                    Or copy and paste this link into your browser:
+                  </p>
+                  <p style="margin: 10px 0 0 0; color: #667eea; font-size: 14px; word-break: break-all;">
+                    <a href="${dashboardUrl}" target="_blank" style="color: #667eea; text-decoration: underline;">${dashboardUrl}</a>
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                  <p style="margin: 0 0 10px 0; color: #888888; font-size: 14px;">
+                    © ${new Date().getFullYear()} TaskFlow. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+  return sendEmail(user.email, subject, html);
 };
 
 module.exports = {
@@ -445,6 +533,7 @@ module.exports = {
   sendPasswordResetEmail,
   sendPasswordResetConfirmation,
   sendMeetingNotification,
+  sendExistingUserInvite,
   testEmail,
   sendSimpleEmail
 };

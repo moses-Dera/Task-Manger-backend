@@ -193,6 +193,7 @@ const assignTask = async (req, res) => {
 const inviteUser = async (req, res) => {
   try {
     const { email, role = 'employee' } = req.body;
+    const { sendExistingUserInvite } = require('../utils/emailService');
 
     if (!email) {
       return res.status(400).json({ success: false, error: 'Email is required' });
@@ -203,12 +204,54 @@ const inviteUser = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({ success: false, error: 'Invalid email format' });
     }
+    
+    // Check if user exists globally
+    const existingUser = await User.findOne({ email });
 
-    const existingUser = await User.findOne({ email }).lean();
     if (existingUser) {
-      return res.status(400).json({ success: false, error: 'User already exists' });
+      // User exists. Check if they are already in THIS company.
+      const alreadyInCompany = existingUser.companies.some(
+        c => c.company.toString() === req.user.company.toString()
+      );
+
+      if (alreadyInCompany) {
+        return res.status(400).json({ success: false, error: 'User is already in your team' });
+      }
+
+      // Add user to this new company
+      existingUser.companies.push({
+        company: req.user.company,
+        role: role,
+        isActive: true,
+        joinedAt: new Date()
+      });
+
+      // Update current company context to the new one (optional, but good for onboarding)
+      // existingUser.currentCompany = req.user.company; 
+      
+      await existingUser.save();
+
+      console.log(`Added existing user ${email} to company ${req.user.company}`);
+
+      // Send "Existing User Invite" email
+      const companyName = "your team"; // Ideally fetch actual company name if available in req
+      sendExistingUserInvite(existingUser, req.user.name, companyName)
+        .then(() => console.log('Invite email sent to existing user'))
+        .catch(err => console.error('Failed to send invite email:', err));
+
+      return res.json({
+        success: true,
+        message: 'Existing user added to your team successfully',
+        user: {
+          id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          role: role
+        }
+      });
     }
 
+    // --- NEW USER CREATION FLOW (Legacy Logic) ---
     const tempPassword = crypto.randomBytes(6).toString('hex');
 
     // Create user with correct schema structure (multi-tenant)
@@ -227,11 +270,11 @@ const inviteUser = async (req, res) => {
 
     console.log('User created with email:', user.email);
 
-    // Prepare user object for email (needs explicit role/company properties)
+    // Prepare user object for email
     const userForEmail = {
       ...user.toObject(),
       role: role,
-      company: req.user.company // We can use the ID or fetch the name if needed, but ID is what was there before
+      company: req.user.company
     };
 
     // Send welcome email with temporary password
@@ -255,6 +298,7 @@ const inviteUser = async (req, res) => {
   } catch (error) {
     console.error('Invite user error:', error);
     if (error.code === 11000) {
+      // Fallback for race conditions
       return res.status(400).json({ success: false, error: 'User with this email already exists' });
     }
     if (error.name === 'ValidationError') {
