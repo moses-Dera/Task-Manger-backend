@@ -25,6 +25,54 @@ const getEmployees = async (req, res) => {
         performanceScore = completionRate >= 90 ? 'A+' : completionRate >= 80 ? 'A' : completionRate >= 70 ? 'B' : 'C';
       }
 
+      // Calculate Streak
+      // Get all completed tasks sorted by date
+      const completedTasksList = await Task.find({
+        assigned_to: employee._id,
+        status: 'completed',
+        company: req.user.company
+      }).sort({ updatedAt: -1 }).select('updatedAt');
+
+      let currentStreak = 0;
+      let streakActive = false;
+
+      if (completedTasksList.length > 0) {
+        const now = new Date();
+        const today = new Date(now.setHours(0, 0, 0, 0));
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+
+        // Check if a task was completed today or yesterday to keep streak alive
+        const lastTaskDate = new Date(completedTasksList[0].updatedAt);
+        lastTaskDate.setHours(0, 0, 0, 0);
+
+        if (lastTaskDate.getTime() === today.getTime() || lastTaskDate.getTime() === yesterday.getTime()) {
+          streakActive = true;
+          currentStreak = 1;
+
+          // Check previous days
+          let checkDate = new Date(lastTaskDate);
+          checkDate.setDate(checkDate.getDate() - 1);
+
+          for (let i = 1; i < completedTasksList.length; i++) {
+            const taskDate = new Date(completedTasksList[i].updatedAt);
+            taskDate.setHours(0, 0, 0, 0);
+
+            if (taskDate.getTime() === checkDate.getTime()) {
+              currentStreak++;
+              checkDate.setDate(checkDate.getDate() - 1);
+            } else if (taskDate.getTime() > checkDate.getTime()) {
+              // Multiple tasks on same day, continue
+              continue;
+            } else {
+              // Streak broken
+              break;
+            }
+          }
+        }
+      }
+
       // Find the role for this specific company
       const companyInfo = employee.companies.find(c => c.company.toString() === req.user.company.toString());
       const role = companyInfo ? companyInfo.role : 'employee';
@@ -38,6 +86,8 @@ const getEmployees = async (req, res) => {
         tasks_assigned: tasksAssigned,
         tasks_completed: tasksCompleted,
         performance_score: performanceScore,
+        currentStreak,
+        streakActive,
         phone: employee.phone || 'N/A',
         department: employee.department || 'N/A'
       };
