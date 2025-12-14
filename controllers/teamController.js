@@ -12,7 +12,7 @@ const getEmployees = async (req, res) => {
       'companies.company': req.user.company,
       'companies.role': 'employee'
     })
-      .select('name email companies phone department')
+      .select('name email companies phone department profilePicture')
       .lean();
 
     const employeesWithStats = await Promise.all(employees.map(async (employee) => {
@@ -33,6 +33,7 @@ const getEmployees = async (req, res) => {
         id: employee._id,
         name: employee.name,
         email: employee.email,
+        profilePicture: employee.profilePicture,
         role: role,
         tasks_assigned: tasksAssigned,
         tasks_completed: tasksCompleted,

@@ -109,7 +109,10 @@ const sendMessage = async (req, res) => {
           _id: req.user._id,
           name: req.user.name,
           email: req.user.email,
-          role: req.user.role || 'employee'
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role || 'employee',
+          profilePicture: req.user.profilePicture
         },
         recipient_id: recipient_id ? { _id: recipient_id } : null, // Minimal recipient data
         createdAt: new Date(),
@@ -159,9 +162,9 @@ const sendMessage = async (req, res) => {
     await message.save();
 
     // Populate for the API response (consistency)
-    await message.populate('sender_id', 'name email role');
+    await message.populate('sender_id', 'name email role profilePicture');
     if (recipient_id) {
-      await message.populate('recipient_id', 'name email role');
+      await message.populate('recipient_id', 'name email role profilePicture');
     }
     if (replyTo) {
       await message.populate('replyTo', 'message sender_id');
@@ -364,8 +367,8 @@ const searchMessages = async (req, res) => {
     }
 
     const messages = await Message.find(searchQuery)
-      .populate('sender_id', 'name email role')
-      .populate('recipient_id', 'name email role')
+      .populate('sender_id', 'name email role profilePicture')
+      .populate('recipient_id', 'name email role profilePicture')
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -593,7 +596,7 @@ const getTeamMembers = async (req, res) => {
     const teamMembers = await User.find({
       'companies.company': company,
       _id: { $ne: req.user._id }
-    }).select('name email role createdAt').sort({ name: 1 });
+    }).select('name email role createdAt profilePicture').sort({ name: 1 });
 
     res.json({ success: true, data: teamMembers });
   } catch (error) {
