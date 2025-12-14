@@ -54,12 +54,14 @@ function initializeSocket(io) {
         });
 
         // Join company room for company-wide broadcasts
-        socket.join(`company_${socket.userCompany}`);
-        console.log(`User ${socket.userName} joined company room: company_${socket.userCompany}`);
-        
+        const companyRoom = `company_${socket.userCompany.toString()}`;
+        socket.join(companyRoom);
+        console.log(`User ${socket.userName} joined company room: ${companyRoom}`);
+
         // Join own room for direct messages
-        socket.join(socket.userId);
-        console.log(`User ${socket.userName} joined personal room: ${socket.userId}`);
+        const userRoom = socket.userId.toString();
+        socket.join(userRoom);
+        console.log(`User ${socket.userName} joined personal room: ${userRoom}`);
 
         // Send current online users to the newly connected user
         const onlineUsersList = Array.from(onlineUsers.keys());
