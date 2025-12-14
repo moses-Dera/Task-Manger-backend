@@ -527,6 +527,11 @@ const sendExistingUserInvite = async (user, managerName, companyName) => {
   return sendEmail(user.email, subject, html);
 };
 
+const sendSimpleEmail = async (to, subject, text) => {
+  // Simple wrapper for sending basic emails
+  return sendEmail(to, subject, text);
+};
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
