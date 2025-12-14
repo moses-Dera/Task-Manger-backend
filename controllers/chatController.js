@@ -116,16 +116,21 @@ const sendMessage = async (req, res) => {
         updatedAt: new Date()
       };
 
+      console.log('Emitting message via Socket.io:', { recipient_id, company });
+      
       // Emit to specific user or company room
       if (recipient_id) {
-        // Direct message - emit to both sender and recipient
+        // Direct message - emit to both sender and recipient rooms
+        console.log('Emitting to sender room:', req.user._id.toString());
+        console.log('Emitting to recipient room:', recipient_id.toString());
+        
         io.to(req.user._id.toString()).emit('new_message', {
           type: 'new_message',
           message: optimisticMessage,
           senderId: req.user._id,
           senderName: req.user.name
         });
-        io.to(recipient_id).emit('new_message', {
+        io.to(recipient_id.toString()).emit('new_message', {
           type: 'new_message',
           message: optimisticMessage,
           senderId: req.user._id,
@@ -133,6 +138,7 @@ const sendMessage = async (req, res) => {
         });
       } else {
         // Group message - emit to company room
+        console.log('Emitting to company room:', `company_${company}`);
         io.to(`company_${company}`).emit('new_message', {
           type: 'new_message',
           message: optimisticMessage,

@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
-const Message = require('./models/Message');
 
 /**
  * Initialize Socket.io server with authentication and event handlers
@@ -41,10 +40,11 @@ function initializeSocket(io) {
 
     // Connection event
     io.on('connection', (socket) => {
-        console.log(`✅ User connected: ${socket.userName} (${socket.userId})`);
+        console.log(`✅ User connected: ${socket.userName} (${socket.userId}) - Socket ID: ${socket.id}`);
 
         // Add user to online users
         onlineUsers.set(socket.userId, socket.id);
+        console.log('Online users map:', Array.from(onlineUsers.entries()));
 
         // Broadcast user online status to their company
         socket.broadcast.emit('user_online', {
@@ -55,69 +55,17 @@ function initializeSocket(io) {
 
         // Join company room for company-wide broadcasts
         socket.join(`company_${socket.userCompany}`);
+        console.log(`User ${socket.userName} joined company room: company_${socket.userCompany}`);
+        
         // Join own room for direct messages
         socket.join(socket.userId);
+        console.log(`User ${socket.userName} joined personal room: ${socket.userId}`);
 
         // Send current online users to the newly connected user
         const onlineUsersList = Array.from(onlineUsers.keys());
         socket.emit('online_users', onlineUsersList);
 
         // ==================== CHAT EVENTS ====================
-
-        /**
-         * Handle new message from frontend
-         * This allows direct Socket.io messaging without HTTP API
-         */
-        socket.on('send_message', async (data) => {
-            try {
-                const { message, recipient_id, replyTo, attachments } = data;
-                const Message = require('./models/Message');
-                
-                // Save message to database
-                const newMessage = new Message({
-                    sender_id: socket.userId,
-                    recipient_id: recipient_id || null,
-                    message,
-                    company: socket.userCompany,
-                    replyTo: replyTo || null,
-                    attachments: attachments || []
-                });
-
-                await newMessage.save();
-                await newMessage.populate('sender_id', 'name email role');
-                if (recipient_id) {
-                    await newMessage.populate('recipient_id', 'name email role');
-                }
-
-                // Emit to appropriate room(s)
-                if (recipient_id) {
-                    // Direct message - emit to both sender and recipient
-                    io.to(socket.userId).emit('new_message', {
-                        type: 'new_message',
-                        message: newMessage,
-                        senderId: socket.userId,
-                        senderName: socket.userName
-                    });
-                    io.to(recipient_id).emit('new_message', {
-                        type: 'new_message',
-                        message: newMessage,
-                        senderId: socket.userId,
-                        senderName: socket.userName
-                    });
-                } else {
-                    // Group message - emit to company room
-                    io.to(`company_${socket.userCompany}`).emit('new_message', {
-                        type: 'new_message',
-                        message: newMessage,
-                        senderId: socket.userId,
-                        senderName: socket.userName
-                    });
-                }
-            } catch (error) {
-                console.error('Socket send message error:', error);
-                socket.emit('message_error', { error: 'Failed to send message' });
-            }
-        });
 
         /**
          * Handle typing indicator
