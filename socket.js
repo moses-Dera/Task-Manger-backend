@@ -63,7 +63,61 @@ function initializeSocket(io) {
 
         // ==================== CHAT EVENTS ====================
 
+        /**
+         * Handle new message from frontend
+         * This allows direct Socket.io messaging without HTTP API
+         */
+        socket.on('send_message', async (data) => {
+            try {
+                const { message, recipient_id, replyTo, attachments } = data;
+                
+                // Create message object
+                const messageData = {
+                    _id: new Date().getTime().toString(), // Temporary ID
+                    sender_id: {
+                        _id: socket.userId,
+                        name: socket.userName,
+                        email: socket.userEmail,
+                        role: socket.userRole
+                    },
+                    recipient_id: recipient_id ? { _id: recipient_id } : null,
+                    message,
+                    company: socket.userCompany,
+                    replyTo,
+                    attachments: attachments || [],
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
 
+                // Emit to appropriate room(s)
+                if (recipient_id) {
+                    // Direct message - emit to both sender and recipient
+                    io.to(socket.userId).emit('new_message', {
+                        type: 'new_message',
+                        message: messageData,
+                        senderId: socket.userId,
+                        senderName: socket.userName
+                    });
+                    io.to(recipient_id).emit('new_message', {
+                        type: 'new_message',
+                        message: messageData,
+                        senderId: socket.userId,
+                        senderName: socket.userName
+                    });
+                } else {
+                    // Group message - emit to company room
+                    io.to(`company_${socket.userCompany}`).emit('new_message', {
+                        type: 'new_message',
+                        message: messageData,
+                        senderId: socket.userId,
+                        senderName: socket.userName
+                    });
+                }
+            } catch (error) {
+                console.error('Socket send message error:', error);
+                socket.emit('message_error', { error: 'Failed to send message' });
+            }
+        });
 
         /**
          * Handle typing indicator
