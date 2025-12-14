@@ -204,7 +204,7 @@ const inviteUser = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({ success: false, error: 'Invalid email format' });
     }
-    
+
     // Check if user exists globally
     const existingUser = await User.findOne({ email });
 
@@ -228,7 +228,7 @@ const inviteUser = async (req, res) => {
 
       // Update current company context to the new one (optional, but good for onboarding)
       // existingUser.currentCompany = req.user.company; 
-      
+
       await existingUser.save();
 
       console.log(`Added existing user ${email} to company ${req.user.company}`);
@@ -292,7 +292,8 @@ const inviteUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        tempPassword: tempPassword // Return temp password for manager to see/print
       }
     });
   } catch (error) {
