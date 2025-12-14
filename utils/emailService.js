@@ -138,7 +138,6 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
                       <td align="center" style="padding: 20px 0;">
                         <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                           <tr>
-                          <tr>
                             <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
                               <!--[if mso]>
                               <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${magicLink}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" stroke="f" fillcolor="#667eea">
@@ -241,10 +240,19 @@ const sendPasswordResetEmail = async (user, resetToken) => {
                         <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                           <tr>
                             <td align="center" bgcolor="#667eea" style="border-radius: 8px;">
-                              <a href="${resetUrl}"
-                                 style="display: inline-block; padding: 16px 40px; font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; background-color: #667eea; border-radius: 8px; border: 1px solid #667eea;">
-                                Reset Password
-                              </a>
+                              <!--[if mso]>
+                              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${resetUrl}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" stroke="f" fillcolor="#667eea">
+                                <w:anchorlock/>
+                                <center>
+                              <![endif]-->
+                                  <a href="${resetUrl}"
+                                     style="background-color:#667eea;border-radius:8px;color:#ffffff;display:inline-block;font-family:'Segoe UI', sans-serif;font-size:16px;font-weight:600;line-height:50px;text-align:center;text-decoration:none;width:200px;-webkit-text-size-adjust:none;">
+                                    Reset Password
+                                  </a>
+                              <!--[if mso]>
+                                </center>
+                              </v:roundrect>
+                              <![endif]-->
                             </td>
                           </tr>
                         </table>
