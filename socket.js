@@ -19,7 +19,7 @@ function initializeSocket(io) {
             }
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded.userId).select('name email role company').lean();
+            const user = await User.findById(decoded.userId).select('name email role companies currentCompany').lean();
 
             if (!user) {
                 return next(new Error('Authentication error: Invalid token'));
@@ -29,7 +29,7 @@ function initializeSocket(io) {
             socket.userEmail = user.email;
             socket.userName = user.name;
             socket.userRole = user.role;
-            socket.userCompany = user.company;
+            socket.userCompany = user.currentCompany || (user.companies && user.companies[0] ? user.companies[0].company : 'default');
 
             next();
         } catch (error) {
@@ -54,14 +54,13 @@ function initializeSocket(io) {
         });
 
         // Join company room for company-wide broadcasts
-        const companyRoom = `company_${socket.userCompany.toString()}`;
+        const companyRoom = `company_${socket.userCompany || 'default'}`;
         socket.join(companyRoom);
         console.log(`User ${socket.userName} joined company room: ${companyRoom}`);
 
         // Join own room for direct messages
-        const userRoom = socket.userId.toString();
-        socket.join(userRoom);
-        console.log(`User ${socket.userName} joined personal room: ${userRoom}`);
+        socket.join(socket.userId);
+        console.log(`User ${socket.userName} joined personal room: ${socket.userId}`);
 
         // Send current online users to the newly connected user
         const onlineUsersList = Array.from(onlineUsers.keys());
