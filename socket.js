@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const Message = require('./models/Message');
 
 /**
  * Initialize Socket.io server with authentication and event handlers
@@ -70,37 +71,36 @@ function initializeSocket(io) {
         socket.on('send_message', async (data) => {
             try {
                 const { message, recipient_id, replyTo, attachments } = data;
+                const Message = require('./models/Message');
                 
-                // Create message object
-                const messageData = {
-                    _id: new Date().getTime().toString(), // Temporary ID
-                    sender_id: {
-                        _id: socket.userId,
-                        name: socket.userName,
-                        email: socket.userEmail,
-                        role: socket.userRole
-                    },
-                    recipient_id: recipient_id ? { _id: recipient_id } : null,
+                // Save message to database
+                const newMessage = new Message({
+                    sender_id: socket.userId,
+                    recipient_id: recipient_id || null,
                     message,
                     company: socket.userCompany,
-                    replyTo,
-                    attachments: attachments || [],
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                };
+                    replyTo: replyTo || null,
+                    attachments: attachments || []
+                });
+
+                await newMessage.save();
+                await newMessage.populate('sender_id', 'name email role');
+                if (recipient_id) {
+                    await newMessage.populate('recipient_id', 'name email role');
+                }
 
                 // Emit to appropriate room(s)
                 if (recipient_id) {
                     // Direct message - emit to both sender and recipient
                     io.to(socket.userId).emit('new_message', {
                         type: 'new_message',
-                        message: messageData,
+                        message: newMessage,
                         senderId: socket.userId,
                         senderName: socket.userName
                     });
                     io.to(recipient_id).emit('new_message', {
                         type: 'new_message',
-                        message: messageData,
+                        message: newMessage,
                         senderId: socket.userId,
                         senderName: socket.userName
                     });
@@ -108,7 +108,7 @@ function initializeSocket(io) {
                     // Group message - emit to company room
                     io.to(`company_${socket.userCompany}`).emit('new_message', {
                         type: 'new_message',
-                        message: messageData,
+                        message: newMessage,
                         senderId: socket.userId,
                         senderName: socket.userName
                     });
