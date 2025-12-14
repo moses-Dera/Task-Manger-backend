@@ -116,15 +116,30 @@ const sendMessage = async (req, res) => {
         updatedAt: new Date()
       };
 
-      const targetRoom = recipient_id || `company_${company}`;
-
-      // Emit immediately
-      io.to(targetRoom).emit('new_message', {
-        type: 'new_message',
-        message: optimisticMessage,
-        senderId: req.user._id,
-        senderName: req.user.name
-      });
+      // Emit to specific user or company room
+      if (recipient_id) {
+        // Direct message - emit to both sender and recipient
+        io.to(req.user._id.toString()).emit('new_message', {
+          type: 'new_message',
+          message: optimisticMessage,
+          senderId: req.user._id,
+          senderName: req.user.name
+        });
+        io.to(recipient_id).emit('new_message', {
+          type: 'new_message',
+          message: optimisticMessage,
+          senderId: req.user._id,
+          senderName: req.user.name
+        });
+      } else {
+        // Group message - emit to company room
+        io.to(`company_${company}`).emit('new_message', {
+          type: 'new_message',
+          message: optimisticMessage,
+          senderId: req.user._id,
+          senderName: req.user.name
+        });
+      }
     }
 
     // Save to database asynchronously (user doesn't wait for this for UI update, but proper response does)
